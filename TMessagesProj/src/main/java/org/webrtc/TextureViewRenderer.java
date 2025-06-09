@@ -11,10 +11,9 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.LiteMode;
-import org.telegram.messenger.SharedConfig;
-import org.telegram.messenger.voip.VoIPService;
+import org.telegramIunzhakov.messenger.AndroidUtilities;
+import org.telegramIunzhakov.messenger.LiteMode;
+import org.telegramIunzhakov.messenger.voip.VoIPService;
 
 import java.util.concurrent.CountDownLatch;
 

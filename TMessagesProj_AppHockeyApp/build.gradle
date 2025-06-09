@@ -185,7 +185,7 @@ android {
     buildFeatures {
         buildConfig = true
     }
-    namespace 'org.telegram.messenger.regular'
+    namespace 'org.telegramIunzhakov.messenger.regular'
 
     lintOptions {
         checkReleaseBuilds false

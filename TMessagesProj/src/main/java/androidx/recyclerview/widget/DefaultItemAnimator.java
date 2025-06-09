@@ -20,7 +20,6 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.TimeInterpolator;
 import android.animation.ValueAnimator;
 import android.os.Build;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewPropertyAnimator;
 import android.view.animation.Interpolator;
@@ -28,7 +27,7 @@ import android.view.animation.Interpolator;
 import androidx.annotation.NonNull;
 import androidx.core.view.ViewCompat;
 
-import org.telegram.messenger.BuildVars;
+import org.telegramIunzhakov.messenger.BuildVars;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,13 +1,10 @@
 package androidx.recyclerview.widget;
 
-import static org.telegram.messenger.AndroidUtilities.dp;
-
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
-import android.util.Log;
 import android.util.LongSparseArray;
 import android.view.View;
 import android.view.ViewPropertyAnimator;
@@ -18,25 +15,24 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.view.ViewCompat;
 
-import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.BuildVars;
-import org.telegram.messenger.FileLog;
-import org.telegram.messenger.ImageReceiver;
-import org.telegram.messenger.MessageObject;
-import org.telegram.messenger.SharedConfig;
-import org.telegram.messenger.Utilities;
-import org.telegram.ui.ActionBar.Theme;
-import org.telegram.ui.Cells.BotHelpCell;
-import org.telegram.ui.Cells.ChatActionCell;
-import org.telegram.ui.Cells.ChatMessageCell;
-import org.telegram.ui.Cells.UserInfoCell;
-import org.telegram.ui.ChatActivity;
-import org.telegram.ui.Components.ChatGreetingsView;
-import org.telegram.ui.Components.CubicBezierInterpolator;
-import org.telegram.ui.Components.RecyclerListView;
-import org.telegram.ui.Components.ThanosEffect;
-import org.telegram.ui.TextMessageEnterTransition;
-import org.telegram.ui.VoiceMessageEnterTransition;
+import org.telegramIunzhakov.messenger.BuildVars;
+import org.telegramIunzhakov.messenger.FileLog;
+import org.telegramIunzhakov.messenger.ImageReceiver;
+import org.telegramIunzhakov.messenger.MessageObject;
+import org.telegramIunzhakov.messenger.SharedConfig;
+import org.telegramIunzhakov.messenger.Utilities;
+import org.telegramIunzhakov.ui.ActionBar.Theme;
+import org.telegramIunzhakov.ui.Cells.BotHelpCell;
+import org.telegramIunzhakov.ui.Cells.ChatActionCell;
+import org.telegramIunzhakov.ui.Cells.ChatMessageCell;
+import org.telegramIunzhakov.ui.Cells.UserInfoCell;
+import org.telegramIunzhakov.ui.ChatActivity;
+import org.telegramIunzhakov.ui.Components.ChatGreetingsView;
+import org.telegramIunzhakov.ui.Components.CubicBezierInterpolator;
+import org.telegramIunzhakov.ui.Components.RecyclerListView;
+import org.telegramIunzhakov.ui.Components.ThanosEffect;
+import org.telegramIunzhakov.ui.TextMessageEnterTransition;
+import org.telegramIunzhakov.ui.VoiceMessageEnterTransition;
 
 import java.util.ArrayList;
 import java.util.Collections;

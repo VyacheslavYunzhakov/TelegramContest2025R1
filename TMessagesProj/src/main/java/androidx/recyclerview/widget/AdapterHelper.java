@@ -16,12 +16,11 @@
 
 package androidx.recyclerview.widget;
 
-import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.core.util.Pools;
 
-import org.telegram.messenger.BuildVars;
+import org.telegramIunzhakov.messenger.BuildVars;
 
 import java.util.ArrayList;
 import java.util.Collections;
