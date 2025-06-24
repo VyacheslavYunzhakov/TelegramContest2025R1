@@ -38,6 +38,7 @@ import android.content.pm.ConfigurationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.database.DataSetObserver;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -75,6 +76,7 @@ import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.URLSpan;
 import android.text.util.Linkify;
+import android.util.DisplayMetrics;
 import android.util.Property;
 import android.util.SparseArray;
 import android.util.SparseIntArray;
@@ -477,6 +479,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private float nameY;
     private float onlineX;
     private float onlineY;
+    private float radius;
     private float expandProgress;
     private float listViewVelocityY;
     private ValueAnimator expandAnimator;
@@ -656,6 +659,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private int balanceDividerRow;
     private int blockedUsersRow;
     private int membersSectionRow;
+    private boolean phase2Initialized = false;
+    private float phase2StartNameX, phase2StartOnlineX;
 
     private int sharedMediaRow;
 
@@ -7324,7 +7329,15 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
             }
 
-            avatarX = -AndroidUtilities.dpf2(47f) * diff;
+
+            float screenCenterX = listView.getMeasuredWidth() / 2f;
+
+            float avatarCurrentWidth = avatarContainer.getMeasuredWidth() * avatarScale;
+            float avatarHalf = avatarCurrentWidth / 2f;
+
+            float targetTranslation = screenCenterX - avatarHalf - avatarContainer.getLeft();
+
+            avatarX = targetTranslation * diff;
             avatarY = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight() / 2.0f * (1.0f + diff) - 21 * AndroidUtilities.density + 27 * AndroidUtilities.density * diff + actionBar.getTranslationY();
 
             float h = openAnimationInProgress ? initialAnimationExtraHeight : extraHeight;
@@ -7563,9 +7576,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     starFgItem.setTranslationX(avatarContainer.getX() + AndroidUtilities.dp(28) + extra);
                     starFgItem.setTranslationY(avatarContainer.getY() + AndroidUtilities.dp(24) + extra);
                 }
-                nameX = -21 * AndroidUtilities.density * diff;
+                DisplayMetrics dm = Resources.getSystem().getDisplayMetrics();
+                float screenCenter = dm.widthPixels * 0.5f/AndroidUtilities.density;
+                nameX = (screenCenter - nameTextView[1].getTextWidth()/AndroidUtilities.density) * diff;
                 nameY = (float) Math.floor(avatarY) + AndroidUtilities.dp(1.3f) + AndroidUtilities.dp(7) * diff + titleAnimationsYDiff * (1f - avatarAnimationProgress);
-                onlineX = -21 * AndroidUtilities.density * diff;
+                onlineX = (screenCenter - onlineTextView[1].getTextWidth()/AndroidUtilities.density) * diff;
                 onlineY = (float) Math.floor(avatarY) + AndroidUtilities.dp(24) + (float) Math.floor(11 * AndroidUtilities.density) * diff;
                 if (showStatusButton != null) {
                     showStatusButton.setAlpha((int) (0xFF * diff));
