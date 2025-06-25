@@ -7579,10 +7579,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
                 DisplayMetrics dm = Resources.getSystem().getDisplayMetrics();
                 float screenCenter = dm.widthPixels * 0.5f/AndroidUtilities.density;
-                nameX = (screenCenter - nameTextView[1].getTextWidth()/AndroidUtilities.density) * diff;
-                nameY = (float) Math.floor(avatarY) + AndroidUtilities.dp(1.3f) + AndroidUtilities.dp(7) * diff + titleAnimationsYDiff * (1f - avatarAnimationProgress);
-                onlineX = (screenCenter - onlineTextView[1].getTextWidth()/AndroidUtilities.density) * diff;
-                onlineY = (float) Math.floor(avatarY) + AndroidUtilities.dp(24) + (float) Math.floor(11 * AndroidUtilities.density) * diff;
+
+                nameX = (screenCenter - nameTextView[1].getTextWidth()/AndroidUtilities.density) * diff - AndroidUtilities.dp(7)* diff ;
+                nameY = (float) Math.floor(avatarY) + AndroidUtilities.dp(1.3f) + AndroidUtilities.dp(7) * diff + titleAnimationsYDiff * (1f - avatarAnimationProgress) + avatarCurrentWidth*diff;
+                onlineX = (screenCenter - onlineTextView[1].getTextWidth()/AndroidUtilities.density) * diff - AndroidUtilities.dp(7)* diff ;
+                onlineY = (float) Math.floor(avatarY) + AndroidUtilities.dp(28) + (float) Math.floor(11 * AndroidUtilities.density) * diff+ avatarCurrentWidth*diff;
                 if (showStatusButton != null) {
                     showStatusButton.setAlpha((int) (0xFF * diff));
                 }
