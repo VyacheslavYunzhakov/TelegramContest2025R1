@@ -7704,10 +7704,14 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void refreshNameAndOnlineXY() {
-        nameX = AndroidUtilities.dp(-21f) + avatarContainer.getMeasuredWidth() * (avatarScale - (42f + 18f) / 42f);
-        nameY = (float) Math.floor(avatarY) + AndroidUtilities.dp(1.3f) + AndroidUtilities.dp(7f) + avatarContainer.getMeasuredHeight() * (avatarScale - (42f + 18f) / 42f) / 2f;
-        onlineX = AndroidUtilities.dp(-21f) + avatarContainer.getMeasuredWidth() * (avatarScale - (42f + 18f) / 42f);
-        onlineY = (float) Math.floor(avatarY) + AndroidUtilities.dp(24) + (float) Math.floor(11 * AndroidUtilities.density) + avatarContainer.getMeasuredHeight() * (avatarScale - (42f + 18f) / 42f) / 2f;
+        DisplayMetrics dm = Resources.getSystem().getDisplayMetrics();
+        float screenCenter = dm.widthPixels * 0.5f/AndroidUtilities.density;
+        float avatarHalf = avatarContainer.getMeasuredHeight() * avatarScale;
+        float factor =  Math.min(expandProgress / 0.2f, 1f);
+        nameX = screenCenter - nameTextView[1].getTextWidth()/AndroidUtilities.density- AndroidUtilities.dp(7);
+        nameY = avatarY + avatarHalf + AndroidUtilities.dp(8.3f) + AndroidUtilities.dp(20)* factor;
+        onlineX = screenCenter - onlineTextView[1].getTextWidth()/AndroidUtilities.density- AndroidUtilities.dp(7);
+        onlineY = avatarY + avatarHalf + AndroidUtilities.dp(39f) + AndroidUtilities.dp(20)* factor;
     }
 
     public RecyclerListView getListView() {
