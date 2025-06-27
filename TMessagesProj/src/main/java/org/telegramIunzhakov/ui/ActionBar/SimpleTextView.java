@@ -94,7 +94,7 @@ public class SimpleTextView extends View implements Drawable.Callback {
     private int offsetX;
     private int offsetY;
     private int textWidth;
-    private int totalWidth;
+    public int totalWidth;
     private int textHeight;
     public int rightDrawableX;
     public int rightDrawableY;

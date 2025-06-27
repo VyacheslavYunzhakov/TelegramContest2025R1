@@ -323,7 +323,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         PHONE_OPTION_telegramIunzhakov_VIDEO_CALL = 3;
     private final static float EXTRA_HEIGHT = 211f;
     private final static float START_AVATAR_SIZE = 42f;
-    private final static float END_AVATAR_SIZE = 100f;
+    private final static float END_AVATAR_SIZE = 97f;
 
     private RecyclerListView listView;
     private RecyclerListView searchListView;
@@ -7333,15 +7333,17 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
 
 
-            float screenCenterX = listView.getMeasuredWidth() / 2f;
+            DisplayMetrics dm = Resources.getSystem().getDisplayMetrics();
+            float screenCenter =dm.widthPixels * 0.5f;
 
-            float avatarCurrentWidth = avatarContainer.getMeasuredWidth() * avatarScale;
+            float avatarCurrentWidth = avatarContainer.getWidth() * avatarScale/AndroidUtilities.density;
             float avatarHalf = avatarCurrentWidth / 2f;
 
-            float targetTranslation = screenCenterX - avatarHalf - avatarContainer.getLeft();
+            float targetTranslationX = screenCenter/ AndroidUtilities.density + avatarHalf - AndroidUtilities.dp(5);
+            float targetTranslationY = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + 14 * AndroidUtilities.density - AndroidUtilities.dp(11)*(1-diff);
 
-            avatarX = targetTranslation * diff;
-            avatarY = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + (actionBar.getTranslationY()==0 ? 7 * AndroidUtilities.density : actionBar.getTranslationY()) + 7 * AndroidUtilities.density * diff;// - 21 * AndroidUtilities.density + 27 * AndroidUtilities.density * diff + actionBar.getTranslationY();
+            avatarX = targetTranslationX * diff;
+            avatarY = targetTranslationY * diff + AndroidUtilities.dp(7)*(1-diff);
 
             float h = openAnimationInProgress ? initialAnimationExtraHeight : extraHeight;
             if (h > AndroidUtilities.dp(EXTRA_HEIGHT) || isPulledDown) {
@@ -7561,7 +7563,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
                 updateCollectibleHint();
             } else if (extraHeight <= AndroidUtilities.dp(EXTRA_HEIGHT)) {
-                avatarScale = (42 + 58 * diff) / 42.0f;
+                avatarScale = (END_AVATAR_SIZE * diff) / START_AVATAR_SIZE;
                 if (storyView != null) {
                     storyView.invalidate();
                 }
@@ -7569,7 +7571,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     giftsView.invalidate();
                 }
                 float nameScale = 1.0f + 0.12f * diff;
-                if (expandAnimator == null || !expandAnimator.isRunning()) {
+                if (expandAnimator == null || !expandAnimator.isRunning()){// && openAnimationInProgress) {
                     avatarContainer.setScaleX(avatarScale);
                     avatarContainer.setScaleY(avatarScale);
                     avatarContainer.setTranslationX(avatarX);
@@ -7582,33 +7584,32 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     starFgItem.setTranslationX(avatarContainer.getX() + AndroidUtilities.dp(28) + extra);
                     starFgItem.setTranslationY(avatarContainer.getY() + AndroidUtilities.dp(24) + extra);
                 }
-                DisplayMetrics dm = Resources.getSystem().getDisplayMetrics();
-                float screenCenter = dm.widthPixels * 0.5f/AndroidUtilities.density;
-
-                nameX = (screenCenter - nameTextView[1].getTextWidth()/AndroidUtilities.density) * diff - AndroidUtilities.dp(7)* diff ;
-                nameY = (float) Math.floor(avatarY) + AndroidUtilities.dp(1.3f) + AndroidUtilities.dp(7) * diff + titleAnimationsYDiff * (1f - avatarAnimationProgress) + avatarCurrentWidth*diff;
-                onlineX = (screenCenter - onlineTextView[1].getTextWidth()/AndroidUtilities.density) * diff - AndroidUtilities.dp(7)* diff ;
-                onlineY = (float) Math.floor(avatarY) + AndroidUtilities.dp(28) + (float) Math.floor(11 * AndroidUtilities.density) * diff+ avatarCurrentWidth*diff;
-                if (showStatusButton != null) {
-                    showStatusButton.setAlpha((int) (0xFF * diff));
-                }
-                for (int a = 0; a < nameTextView.length; a++) {
-                    if (nameTextView[a] == null) {
-                        continue;
+//                if (openAnimationInProgress) {
+                    nameX = (screenCenter/ AndroidUtilities.density - nameTextView[1].totalWidth / 2f ) * diff;
+                    nameY =  targetTranslationY + (END_AVATAR_SIZE * AndroidUtilities.density) * diff;
+                    onlineY = targetTranslationY + (END_AVATAR_SIZE * AndroidUtilities.density) * diff + AndroidUtilities.dp(26);
+                    if (showStatusButton != null) {
+                        showStatusButton.setAlpha((int) (0xFF * diff));
                     }
-                    if (expandAnimator == null || !expandAnimator.isRunning()) {
-                        nameTextView[a].setTranslationX(nameX);
-                        nameTextView[a].setTranslationY(nameY);
-
-                        onlineTextView[a].setTranslationX(onlineX + customPhotoOffset);
-                        onlineTextView[a].setTranslationY(onlineY);
-                        if (a == 1) {
-                            mediaCounterTextView.setTranslationX(onlineX);
-                            mediaCounterTextView.setTranslationY(onlineY);
+                    for (int a = 0; a < nameTextView.length; a++) {
+                        onlineX = (screenCenter/ AndroidUtilities.density - onlineTextView[a].totalWidth / 2f ) * diff;
+                        if (nameTextView[a] == null) {
+                            continue;
                         }
-                    }
-                    nameTextView[a].setScaleX(nameScale);
-                    nameTextView[a].setScaleY(nameScale);
+                        if (expandAnimator == null || !expandAnimator.isRunning()) {
+                            nameTextView[a].setTranslationX(nameX);
+                            nameTextView[a].setTranslationY(nameY);
+
+                            onlineTextView[a].setTranslationX(onlineX + customPhotoOffset);
+                            onlineTextView[a].setTranslationY(onlineY);
+                            if (a == 1) {
+                                mediaCounterTextView.setTranslationX(onlineX);
+                                mediaCounterTextView.setTranslationY(onlineY);
+                            }
+                        }
+                        nameTextView[a].setScaleX(nameScale);
+                        nameTextView[a].setScaleY(nameScale);
+//                    }
                 }
                 updateCollectibleHint();
             }
