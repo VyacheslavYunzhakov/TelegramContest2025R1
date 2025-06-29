@@ -323,7 +323,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         PHONE_OPTION_telegramIunzhakov_VIDEO_CALL = 3;
     private final static float EXTRA_HEIGHT = 211f;
     private final static float START_AVATAR_SIZE = 42f;
-    private final static float END_AVATAR_SIZE = 97f;
+    private final static float END_AVATAR_SIZE = 98f;
 
     private RecyclerListView listView;
     private RecyclerListView searchListView;
@@ -7159,7 +7159,164 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             if (playProfileAnimation != 0) {
                 allowProfileAnimation = extraHeight != 0;
             }
-            needLayout(true);
+            expandAvatarToViewPager();
+        }
+    }
+
+    private void expandAvatarToViewPager() {
+        float h = openAnimationInProgress ? initialAnimationExtraHeight : extraHeight;
+        final int newTop = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight();
+        expandProgress = Math.max(0f, Math.min(1f, (h - AndroidUtilities.dp(EXTRA_HEIGHT)) / (listView.getMeasuredWidth() - newTop - AndroidUtilities.dp(EXTRA_HEIGHT))));
+        avatarScale = AndroidUtilities.lerp((END_AVATAR_SIZE) / START_AVATAR_SIZE, (END_AVATAR_SIZE + 20f) / START_AVATAR_SIZE, Math.min(1f, expandProgress * 5f));
+
+        final float durationFactor = Math.min(AndroidUtilities.dpf2(2000f), Math.max(AndroidUtilities.dpf2(1100f), Math.abs(listViewVelocityY))) / AndroidUtilities.dpf2(1100f);
+        if (allowPullingDown && (openingAvatar || expandProgress >= 0.20f)) {
+            if (!isPulledDown) {
+                if (otherItem != null) {
+                    if (!getMessagesController().isChatNoForwards(currentChat)) {
+                        otherItem.showSubItem(gallery_menu_save);
+                    } else {
+                        otherItem.hideSubItem(gallery_menu_save);
+                    }
+                    if (imageUpdater != null) {
+                        otherItem.showSubItem(add_photo);
+                        otherItem.showSubItem(edit_avatar);
+                        otherItem.showSubItem(delete_avatar);
+                        otherItem.hideSubItem(set_as_main);
+                        otherItem.hideSubItem(logout);
+                    }
+                }
+                if (searchItem != null) {
+                    searchItem.setEnabled(false);
+                }
+                isPulledDown = true;
+                NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.needCheckSystemBarColors, true);
+                overlaysView.setOverlaysVisible(true, durationFactor);
+                avatarsViewPagerIndicatorView.refreshVisibility(durationFactor);
+                avatarsViewPager.setCreateThumbFromParent(true);
+                avatarsViewPager.getAdapter().notifyDataSetChanged();
+                expandAnimator.cancel();
+                float value = AndroidUtilities.lerp(expandAnimatorValues, currentExpanAnimatorFracture);
+                expandAnimatorValues[0] = value;
+                expandAnimatorValues[1] = 1f;
+                if (storyView != null && !storyView.isEmpty()) {
+                    expandAnimator.setInterpolator(new FastOutSlowInInterpolator());
+                    expandAnimator.setDuration((long) ((1f - value) * 1.3f * 250f / durationFactor));
+                } else {
+                    expandAnimator.setInterpolator(CubicBezierInterpolator.EASE_BOTH);
+                    expandAnimator.setDuration((long) ((1f - value) * 250f / durationFactor));
+                }
+                expandAnimator.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationStart(Animator animation) {
+                        setForegroundImage(false);
+                        avatarsViewPager.setAnimatedFileMaybe(avatarImage.getImageReceiver().getAnimation());
+                        avatarsViewPager.resetCurrentItem();
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        expandAnimator.removeListener(this);
+                        topView.setBackgroundColor(Color.BLACK);
+                        avatarContainer.setVisibility(View.GONE);
+                        avatarsViewPager.setVisibility(View.VISIBLE);
+                    }
+                });
+                expandAnimator.start();
+            }
+            ViewGroup.LayoutParams params = avatarsViewPager.getLayoutParams();
+            params.width = listView.getMeasuredWidth();
+            params.height = (int) (h + newTop);
+            avatarsViewPager.requestLayout();
+            if (!expandAnimator.isRunning()) {
+                float additionalTranslationY = 0;
+                if (openAnimationInProgress && playProfileAnimation == 2) {
+                    additionalTranslationY = -(1.0f - avatarAnimationProgress) * AndroidUtilities.dp(50);
+                }
+                onlineX = AndroidUtilities.dpf2(16f) - onlineTextView[1].getLeft();
+                nameTextView[1].setTranslationX(AndroidUtilities.dpf2(18f) - nameTextView[1].getLeft());
+                nameTextView[1].setTranslationY(newTop + h - AndroidUtilities.dpf2(38f) - nameTextView[1].getBottom() + additionalTranslationY);
+                onlineTextView[1].setTranslationX(onlineX + customPhotoOffset);
+                onlineTextView[1].setTranslationY(newTop + h - AndroidUtilities.dpf2(18f) - onlineTextView[1].getBottom() + additionalTranslationY);
+                mediaCounterTextView.setTranslationX(onlineTextView[1].getTranslationX());
+                mediaCounterTextView.setTranslationY(onlineTextView[1].getTranslationY());
+                updateCollectibleHint();
+            }
+        } else {
+            if (isPulledDown) {
+                isPulledDown = false;
+                NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.needCheckSystemBarColors, true);
+                if (otherItem != null) {
+                    otherItem.hideSubItem(gallery_menu_save);
+                    if (imageUpdater != null) {
+                        otherItem.hideSubItem(set_as_main);
+                        otherItem.hideSubItem(edit_avatar);
+                        otherItem.hideSubItem(delete_avatar);
+                        otherItem.showSubItem(add_photo);
+                        otherItem.showSubItem(logout);
+//                                otherItem.showSubItem(edit_name);
+                    }
+                }
+                if (searchItem != null) {
+                    searchItem.setEnabled(!scrolling);
+                }
+                overlaysView.setOverlaysVisible(false, durationFactor);
+                avatarsViewPagerIndicatorView.refreshVisibility(durationFactor);
+                expandAnimator.cancel();
+                avatarImage.getImageReceiver().setAllowStartAnimation(true);
+                avatarImage.getImageReceiver().startAnimation();
+
+                float value = AndroidUtilities.lerp(expandAnimatorValues, currentExpanAnimatorFracture);
+                expandAnimatorValues[0] = value;
+                expandAnimatorValues[1] = 0f;
+                expandAnimator.setInterpolator(CubicBezierInterpolator.EASE_BOTH);
+                if (!isInLandscapeMode) {
+                    expandAnimator.setDuration((long) (value * 250f / durationFactor));
+                } else {
+                    expandAnimator.setDuration(0);
+                }
+                topView.setBackgroundColor(getThemedColor(Theme.key_avatar_backgroundActionBarBlue));
+
+                if (!doNotSetForeground) {
+                    BackupImageView imageView = avatarsViewPager.getCurrentItemView();
+                    if (imageView != null) {
+                        if (imageView.getImageReceiver().getDrawable() instanceof VectorAvatarThumbDrawable) {
+                            avatarImage.drawForeground(false);
+                        } else {
+                            avatarImage.drawForeground(true);
+                            avatarImage.setForegroundImageDrawable(imageView.getImageReceiver().getDrawableSafe());
+                        }
+                    }
+                }
+                avatarImage.setForegroundAlpha(1f);
+                avatarContainer.setVisibility(View.VISIBLE);
+                avatarsViewPager.setVisibility(View.GONE);
+                expandAnimator.start();
+            }
+            DisplayMetrics dm = Resources.getSystem().getDisplayMetrics();
+            float screenCenter =dm.widthPixels * 0.5f;
+
+            float avatarCurrentWidth = avatarContainer.getWidth() * avatarScale/AndroidUtilities.density;
+            float avatarHalf = avatarCurrentWidth / 2f;
+
+            targetTranslationX = screenCenter/ AndroidUtilities.density + avatarHalf - 3*avatarScale;
+            float factor = Math.min(expandProgress / 0.2f, 1f);
+            avatarContainer.setScaleX(avatarScale);
+            avatarContainer.setScaleY(avatarScale);
+            avatarContainer.setTranslationX(avatarX);
+            avatarContainer.setTranslationY(avatarY + AndroidUtilities.dp(20)*factor);
+
+
+            if (expandAnimator == null || !expandAnimator.isRunning()) {
+//                refreshNameAndOnlineXY();
+                nameTextView[1].setTranslationX(nameX);
+                nameTextView[1].setTranslationY(nameY);
+                onlineTextView[1].setTranslationX(onlineX + customPhotoOffset);
+                onlineTextView[1].setTranslationY(onlineY);
+                mediaCounterTextView.setTranslationX(onlineX);
+                mediaCounterTextView.setTranslationY(onlineY);
+                updateCollectibleHint();
+            }
         }
     }
 
@@ -7239,6 +7396,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         }
     }
 
+    float endAnimationNameY = 0f;
+    float endAnimationOnlineY = 0f;
+    float targetTranslationX = 0f;
+    float targetTranslationY = 0f;
+
+    float nameScale = 1f;
     private void needLayout(boolean animated) {
         final int newTop = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight();
 
@@ -7331,19 +7494,21 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     giftsView.setExpandCoords(avatarContainer2.getMeasuredWidth() - AndroidUtilities.dp(40), writeButtonVisible, (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight() + extraHeight + searchTransitionOffset);
                 }
             }
-
+            int actionBarHeight = ActionBar.getCurrentActionBarHeight();
 
             DisplayMetrics dm = Resources.getSystem().getDisplayMetrics();
             float screenCenter =dm.widthPixels * 0.5f;
 
             float avatarCurrentWidth = avatarContainer.getWidth() * avatarScale/AndroidUtilities.density;
             float avatarHalf = avatarCurrentWidth / 2f;
+            int viewTop = actionBarHeight - dp(42) + (Build.VERSION.SDK_INT >= 21 && actionBar.getOccupyStatusBar()  ? AndroidUtilities.statusBarHeight : 0);
 
-            float targetTranslationX = screenCenter/ AndroidUtilities.density + avatarHalf - AndroidUtilities.dp(5);
-            float targetTranslationY = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + 14 * AndroidUtilities.density - AndroidUtilities.dp(11)*(1-diff);
+            targetTranslationX = screenCenter/ AndroidUtilities.density + avatarHalf - 3*avatarScale;
+            targetTranslationY = viewTop;
+            float yAdjustmentFixated = AndroidUtilities.dp(7.5f)*(1-diff);
 
             avatarX = targetTranslationX * diff;
-            avatarY = targetTranslationY * diff + AndroidUtilities.dp(7)*(1-diff);
+            avatarY = targetTranslationY - yAdjustmentFixated;
 
             float h = openAnimationInProgress ? initialAnimationExtraHeight : extraHeight;
             if (h > AndroidUtilities.dp(EXTRA_HEIGHT) || isPulledDown) {
@@ -7355,150 +7520,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (giftsView != null) {
                     giftsView.invalidate();
                 }
-
-                final float durationFactor = Math.min(AndroidUtilities.dpf2(2000f), Math.max(AndroidUtilities.dpf2(1100f), Math.abs(listViewVelocityY))) / AndroidUtilities.dpf2(1100f);
-
-                if (allowPullingDown && (openingAvatar || expandProgress >= 0.20f)) {
-                    if (!isPulledDown) {
-                        if (otherItem != null) {
-                            if (!getMessagesController().isChatNoForwards(currentChat)) {
-                                otherItem.showSubItem(gallery_menu_save);
-                            } else {
-                                otherItem.hideSubItem(gallery_menu_save);
-                            }
-                            if (imageUpdater != null) {
-                                otherItem.showSubItem(add_photo);
-                                otherItem.showSubItem(edit_avatar);
-                                otherItem.showSubItem(delete_avatar);
-                                otherItem.hideSubItem(set_as_main);
-                                otherItem.hideSubItem(logout);
-                            }
-                        }
-                        if (searchItem != null) {
-                            searchItem.setEnabled(false);
-                        }
-                        isPulledDown = true;
-                        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.needCheckSystemBarColors, true);
-                        overlaysView.setOverlaysVisible(true, durationFactor);
-                        avatarsViewPagerIndicatorView.refreshVisibility(durationFactor);
-                        avatarsViewPager.setCreateThumbFromParent(true);
-                        avatarsViewPager.getAdapter().notifyDataSetChanged();
-                        expandAnimator.cancel();
-                        float value = AndroidUtilities.lerp(expandAnimatorValues, currentExpanAnimatorFracture);
-                        expandAnimatorValues[0] = value;
-                        expandAnimatorValues[1] = 1f;
-                        if (storyView != null && !storyView.isEmpty()) {
-                            expandAnimator.setInterpolator(new FastOutSlowInInterpolator());
-                            expandAnimator.setDuration((long) ((1f - value) * 1.3f * 250f / durationFactor));
-                        } else {
-                            expandAnimator.setInterpolator(CubicBezierInterpolator.EASE_BOTH);
-                            expandAnimator.setDuration((long) ((1f - value) * 250f / durationFactor));
-                        }
-                        expandAnimator.addListener(new AnimatorListenerAdapter() {
-                            @Override
-                            public void onAnimationStart(Animator animation) {
-                                setForegroundImage(false);
-                                avatarsViewPager.setAnimatedFileMaybe(avatarImage.getImageReceiver().getAnimation());
-                                avatarsViewPager.resetCurrentItem();
-                            }
-
-                            @Override
-                            public void onAnimationEnd(Animator animation) {
-                                expandAnimator.removeListener(this);
-                                topView.setBackgroundColor(Color.BLACK);
-                                avatarContainer.setVisibility(View.GONE);
-                                avatarsViewPager.setVisibility(View.VISIBLE);
-                            }
-                        });
-                        expandAnimator.start();
-                    }
-                    ViewGroup.LayoutParams params = avatarsViewPager.getLayoutParams();
-                    params.width = listView.getMeasuredWidth();
-                    params.height = (int) (h + newTop);
-                    avatarsViewPager.requestLayout();
-                    if (!expandAnimator.isRunning()) {
-                        float additionalTranslationY = 0;
-                        if (openAnimationInProgress && playProfileAnimation == 2) {
-                            additionalTranslationY = -(1.0f - avatarAnimationProgress) * AndroidUtilities.dp(50);
-                        }
-                        onlineX = AndroidUtilities.dpf2(16f) - onlineTextView[1].getLeft();
-                        nameTextView[1].setTranslationX(AndroidUtilities.dpf2(18f) - nameTextView[1].getLeft());
-                        nameTextView[1].setTranslationY(newTop + h - AndroidUtilities.dpf2(38f) - nameTextView[1].getBottom() + additionalTranslationY);
-                        onlineTextView[1].setTranslationX(onlineX + customPhotoOffset);
-                        onlineTextView[1].setTranslationY(newTop + h - AndroidUtilities.dpf2(18f) - onlineTextView[1].getBottom() + additionalTranslationY);
-                        mediaCounterTextView.setTranslationX(onlineTextView[1].getTranslationX());
-                        mediaCounterTextView.setTranslationY(onlineTextView[1].getTranslationY());
-                        updateCollectibleHint();
-                    }
-                } else {
-                    if (isPulledDown) {
-                        isPulledDown = false;
-                        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.needCheckSystemBarColors, true);
-                        if (otherItem != null) {
-                            otherItem.hideSubItem(gallery_menu_save);
-                            if (imageUpdater != null) {
-                                otherItem.hideSubItem(set_as_main);
-                                otherItem.hideSubItem(edit_avatar);
-                                otherItem.hideSubItem(delete_avatar);
-                                otherItem.showSubItem(add_photo);
-                                otherItem.showSubItem(logout);
-//                                otherItem.showSubItem(edit_name);
-                            }
-                        }
-                        if (searchItem != null) {
-                            searchItem.setEnabled(!scrolling);
-                        }
-                        overlaysView.setOverlaysVisible(false, durationFactor);
-                        avatarsViewPagerIndicatorView.refreshVisibility(durationFactor);
-                        expandAnimator.cancel();
-                        avatarImage.getImageReceiver().setAllowStartAnimation(true);
-                        avatarImage.getImageReceiver().startAnimation();
-
-                        float value = AndroidUtilities.lerp(expandAnimatorValues, currentExpanAnimatorFracture);
-                        expandAnimatorValues[0] = value;
-                        expandAnimatorValues[1] = 0f;
-                        expandAnimator.setInterpolator(CubicBezierInterpolator.EASE_BOTH);
-                        if (!isInLandscapeMode) {
-                            expandAnimator.setDuration((long) (value * 250f / durationFactor));
-                        } else {
-                            expandAnimator.setDuration(0);
-                        }
-                        topView.setBackgroundColor(getThemedColor(Theme.key_avatar_backgroundActionBarBlue));
-
-                        if (!doNotSetForeground) {
-                            BackupImageView imageView = avatarsViewPager.getCurrentItemView();
-                            if (imageView != null) {
-                                if (imageView.getImageReceiver().getDrawable() instanceof VectorAvatarThumbDrawable) {
-                                    avatarImage.drawForeground(false);
-                                } else {
-                                    avatarImage.drawForeground(true);
-                                    avatarImage.setForegroundImageDrawable(imageView.getImageReceiver().getDrawableSafe());
-                                }
-                            }
-                        }
-                        avatarImage.setForegroundAlpha(1f);
-                        avatarContainer.setVisibility(View.VISIBLE);
-                        avatarsViewPager.setVisibility(View.GONE);
-                        expandAnimator.start();
-                    }
-                    float factor = Math.min(expandProgress / 0.2f, 1f);
-                    avatarContainer.setScaleX(avatarScale);
-                    avatarContainer.setScaleY(avatarScale);
-                    avatarContainer.setTranslationX(avatarX);
-                    avatarContainer.setTranslationY(avatarY + AndroidUtilities.dp(20)*factor);
-
-
-                    if (expandAnimator == null || !expandAnimator.isRunning()) {
-                        refreshNameAndOnlineXY();
-                        nameTextView[1].setTranslationX(nameX);
-                        nameTextView[1].setTranslationY(nameY);
-                        onlineTextView[1].setTranslationX(onlineX + customPhotoOffset);
-                        onlineTextView[1].setTranslationY(onlineY);
-                        mediaCounterTextView.setTranslationX(onlineX);
-                        mediaCounterTextView.setTranslationY(onlineY);
-                        updateCollectibleHint();
-                    }
-                }
+                
             }
 
             if (openAnimationInProgress && playProfileAnimation == 2) {
@@ -7563,15 +7585,15 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
                 updateCollectibleHint();
             } else if (extraHeight <= AndroidUtilities.dp(EXTRA_HEIGHT)) {
-                avatarScale = (END_AVATAR_SIZE * diff) / START_AVATAR_SIZE;
+                avatarScale = (START_AVATAR_SIZE + (END_AVATAR_SIZE-START_AVATAR_SIZE) * diff) / START_AVATAR_SIZE;
                 if (storyView != null) {
                     storyView.invalidate();
                 }
                 if (giftsView != null) {
                     giftsView.invalidate();
                 }
-                float nameScale = 1.0f + 0.12f * diff;
-                if (expandAnimator == null || !expandAnimator.isRunning()){// && openAnimationInProgress) {
+                nameScale = 1.0f + 0.36f * diff;
+                if (expandAnimator == null || !expandAnimator.isRunning() && openAnimationInProgress) {
                     avatarContainer.setScaleX(avatarScale);
                     avatarContainer.setScaleY(avatarScale);
                     avatarContainer.setTranslationX(avatarX);
@@ -7584,10 +7606,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     starFgItem.setTranslationX(avatarContainer.getX() + AndroidUtilities.dp(28) + extra);
                     starFgItem.setTranslationY(avatarContainer.getY() + AndroidUtilities.dp(24) + extra);
                 }
-//                if (openAnimationInProgress) {
-                    nameX = (screenCenter/ AndroidUtilities.density - nameTextView[1].totalWidth / 2f ) * diff;
-                    nameY =  targetTranslationY + (END_AVATAR_SIZE * AndroidUtilities.density) * diff;
-                    onlineY = targetTranslationY + (END_AVATAR_SIZE * AndroidUtilities.density) * diff + AndroidUtilities.dp(26);
+                if (openAnimationInProgress) {
+                    nameX = (screenCenter/ AndroidUtilities.density - (nameTextView[1].totalWidth * nameScale)/ 2f ) * diff;
+                    nameY =  targetTranslationY + ((END_AVATAR_SIZE + 7f) * AndroidUtilities.density) * diff - yAdjustmentFixated;
+                    onlineY = nameY + AndroidUtilities.dp(24)*nameScale;
                     if (showStatusButton != null) {
                         showStatusButton.setAlpha((int) (0xFF * diff));
                     }
@@ -7596,7 +7618,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         if (nameTextView[a] == null) {
                             continue;
                         }
-                        if (expandAnimator == null || !expandAnimator.isRunning()) {
+//                        if (expandAnimator == null || !expandAnimator.isRunning()) {
                             nameTextView[a].setTranslationX(nameX);
                             nameTextView[a].setTranslationY(nameY);
 
@@ -7606,11 +7628,16 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 mediaCounterTextView.setTranslationX(onlineX);
                                 mediaCounterTextView.setTranslationY(onlineY);
                             }
-                        }
+//                        }
                         nameTextView[a].setScaleX(nameScale);
                         nameTextView[a].setScaleY(nameScale);
-//                    }
+
+                    }
                 }
+                    if (endAnimationNameY == 0 && endAnimationOnlineY == 0 && diff == 1) {
+                        endAnimationNameY = nameY;
+                        endAnimationOnlineY = onlineY;
+                    }
                 updateCollectibleHint();
             }
 
@@ -7707,12 +7734,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private void refreshNameAndOnlineXY() {
         DisplayMetrics dm = Resources.getSystem().getDisplayMetrics();
         float screenCenter = dm.widthPixels * 0.5f/AndroidUtilities.density;
-        float avatarHalf = avatarContainer.getMeasuredHeight() * avatarScale;
+        float avatarCurrentWidth = avatarContainer.getWidth() * avatarScale/AndroidUtilities.density;
         float factor =  Math.min(expandProgress / 0.2f, 1f);
-        nameX = screenCenter - nameTextView[1].getTextWidth()/AndroidUtilities.density- AndroidUtilities.dp(7);
-        nameY = avatarY + avatarHalf + AndroidUtilities.dp(8.3f) + AndroidUtilities.dp(20)* factor;
-        onlineX = screenCenter - onlineTextView[1].getTextWidth()/AndroidUtilities.density- AndroidUtilities.dp(7);
-        onlineY = avatarY + avatarHalf + AndroidUtilities.dp(39f) + AndroidUtilities.dp(20)* factor;
+        nameX = targetTranslationX - (nameTextView[1].totalWidth * nameScale)/ 2f ;
+        nameY = targetTranslationY + avatarCurrentWidth + AndroidUtilities.dp(20 * factor);
+        onlineX = targetTranslationX - onlineTextView[1].totalWidth/2f;
+        onlineY = targetTranslationY + avatarCurrentWidth + AndroidUtilities.dp(26) + AndroidUtilities.dp(20 * factor);
     }
 
     public RecyclerListView getListView() {
@@ -7722,7 +7749,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private void needLayoutText(float diff) {
         FrameLayout.LayoutParams layoutParams;
         float scale = nameTextView[1].getScaleX();
-        float maxScale = extraHeight > AndroidUtilities.dp(EXTRA_HEIGHT) ? 1.67f : 1.12f;
+        float maxScale = extraHeight > AndroidUtilities.dp(EXTRA_HEIGHT) ? 1.67f : 1.36f;
 
         if (extraHeight > AndroidUtilities.dp(EXTRA_HEIGHT) && scale != maxScale) {
             return;
@@ -8502,7 +8529,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
         topView.invalidate();
 
-        needLayout(true);
+        if (openAnimationInProgress) {
+            needLayout(true);
+        }
         if (fragmentView != null) {
             fragmentView.invalidate();
         }
