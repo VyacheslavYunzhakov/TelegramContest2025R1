@@ -7520,7 +7520,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (giftsView != null) {
                     giftsView.invalidate();
                 }
-                
+                expandAvatarToViewPager();
             }
 
             if (openAnimationInProgress && playProfileAnimation == 2) {
