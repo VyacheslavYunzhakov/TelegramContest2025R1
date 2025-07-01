@@ -7233,14 +7233,16 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         updateCollectibleHint();
     }
 
-    float previousAvatarWidth = END_AVATAR_SIZE;
     float startX = 0f;
+    float startY = 0f;
+
+    float AVATAR_ENLARGE_SIZE = 10f;
 
     private void expandAvatarToViewPager() {
         float h = openAnimationInProgress ? initialAnimationExtraHeight : extraHeight;
         final int newTop = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight();
         expandProgress = Math.max(0f, Math.min(1f, (h - AndroidUtilities.dp(EXTRA_HEIGHT)) / (listView.getMeasuredWidth() - newTop - AndroidUtilities.dp(EXTRA_HEIGHT))));
-        avatarScale = AndroidUtilities.lerp((END_AVATAR_SIZE) / START_AVATAR_SIZE, (END_AVATAR_SIZE + 20f) / START_AVATAR_SIZE, Math.min(1f, expandProgress * 5f));
+        avatarScale = AndroidUtilities.lerp((END_AVATAR_SIZE) / START_AVATAR_SIZE, (END_AVATAR_SIZE + AVATAR_ENLARGE_SIZE) / START_AVATAR_SIZE, Math.min(1f, expandProgress * 5f));
 
         final float durationFactor = Math.min(AndroidUtilities.dpf2(2000f), Math.max(AndroidUtilities.dpf2(1100f), Math.abs(listViewVelocityY))) / AndroidUtilities.dpf2(1100f);
         if (allowPullingDown && (openingAvatar || expandProgress >= 0.20f)) {
@@ -7367,28 +7369,29 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 expandAnimator.start();
             }
 
-            float avatarCurrentWidth = avatarContainer.getWidth() * avatarScale/AndroidUtilities.density;
             if (startX == 0) {
                 startX = avatarContainer.getTranslationX();
             }
-
+            if (startY == 0) {
+                startY = avatarY;
+            }
             float factor = Math.min(expandProgress / 0.2f, 1f);
-            avatarX = startX - (20) * (factor);
-            previousAvatarWidth = avatarCurrentWidth;
+            avatarY = startY + AndroidUtilities.dp(10)*factor;
+            avatarX = startX - (AVATAR_ENLARGE_SIZE) * (factor);
             avatarContainer.setScaleX(avatarScale);
             avatarContainer.setScaleY(avatarScale);
             avatarContainer.setTranslationX(avatarX);
-            avatarContainer.setTranslationY(avatarY + AndroidUtilities.dp(20)*factor);
+            avatarContainer.setTranslationY(avatarY);
 
 
             if (expandAnimator == null || !expandAnimator.isRunning()) {
-//                refreshNameAndOnlineXY();
+                float yTranslation = AndroidUtilities.dp(20)*factor + AVATAR_ENLARGE_SIZE*factor;
                 nameTextView[1].setTranslationX(nameX);
-                nameTextView[1].setTranslationY(nameY);
+                nameTextView[1].setTranslationY(nameY + yTranslation);
                 onlineTextView[1].setTranslationX(onlineX + customPhotoOffset);
-                onlineTextView[1].setTranslationY(onlineY);
+                onlineTextView[1].setTranslationY(onlineY + yTranslation);
                 mediaCounterTextView.setTranslationX(onlineX);
-                mediaCounterTextView.setTranslationY(onlineY);
+                mediaCounterTextView.setTranslationY(onlineY + yTranslation);
                 updateCollectibleHint();
             }
         }
@@ -7798,13 +7801,13 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void refreshNameAndOnlineXY() {
-        float screenCenter = dm.widthPixels * 0.5f/AndroidUtilities.density;
-        float avatarCurrentWidth = avatarContainer.getWidth() * avatarScale/AndroidUtilities.density;
-        float factor =  Math.min(expandProgress / 0.2f, 1f);
-        nameX = avatarX - (nameTextView[1].totalWidth * nameScale)/ 2f ;
-        nameY = viewTop + avatarCurrentWidth + AndroidUtilities.dp(20 * factor);
-        onlineX = avatarX - onlineTextView[1].totalWidth/2f;
-        onlineY = viewTop + avatarCurrentWidth + AndroidUtilities.dp(26) + AndroidUtilities.dp(20 * factor);
+//        float screenCenter = dm.widthPixels * 0.5f/AndroidUtilities.density;
+//        float avatarCurrentWidth = avatarContainer.getWidth() * avatarScale/AndroidUtilities.density;
+//        float factor =  Math.min(expandProgress / 0.2f, 1f);
+//        nameX = avatarX - (nameTextView[1].totalWidth * nameScale)/ 2f ;
+//        nameY = viewTop + avatarCurrentWidth + AndroidUtilities.dp(20 * factor);
+//        onlineX = avatarX - onlineTextView[1].totalWidth/2f;
+//        onlineY = viewTop + avatarCurrentWidth + AndroidUtilities.dp(26) + AndroidUtilities.dp(20 * factor);
     }
 
     public RecyclerListView getListView() {
