@@ -7395,6 +7395,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 updateCollectibleHint();
             }
         }
+        if (isPulledDown || (overlaysView != null && overlaysView.animator != null && overlaysView.animator.isRunning())) {
+            final ViewGroup.LayoutParams overlaysLp = overlaysView.getLayoutParams();
+            overlaysLp.width = listView.getMeasuredWidth();
+            overlaysLp.height = (int) (extraHeight + newTop);
+            overlaysView.requestLayout();
+        }
     }
 
     public void updateSelectedMediaTabText() {
