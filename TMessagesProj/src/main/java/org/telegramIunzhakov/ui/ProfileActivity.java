@@ -7369,10 +7369,16 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 expandAnimator.start();
             }
 
-            if (startX == 0) {
-                startX = avatarContainer.getTranslationX();
+            if (startX == 0f) {
+                float x = avatarContainer.getTranslationX();
+                if (x != 0) {
+                    startX = x;
+                } else {
+                    float screenCenter = dm.widthPixels/2f;
+                    startX =  screenCenter/ AndroidUtilities.density + END_AVATAR_SIZE/2 - 5;
+                }
             }
-            if (startY == 0) {
+            if (startY == 0f) {
                 startY = avatarY;
             }
             float factor = Math.min(expandProgress / 0.2f, 1f);
@@ -7583,7 +7589,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             float avatarHalf = avatarCurrentWidth / 2f;
 
 
-            float targetTranslationX = screenCenter/ AndroidUtilities.density + avatarHalf - 3*avatarScale;
+            float targetTranslationX = screenCenter/ AndroidUtilities.density + avatarHalf - 5;
             float yAdjustmentFixated = AndroidUtilities.dp(7.5f)*(1-diff);
 
             avatarX = targetTranslationX * diff;
@@ -7626,7 +7632,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
 
                 avatarImage.setRoundRadius((int) AndroidUtilities.lerp(getSmallAvatarRoundRadius(), 0f, avatarAnimationProgress));
-                avatarContainer.setTranslationX(AndroidUtilities.lerp(avX, 0, avatarAnimationProgress));
+                avatarContainer.setTranslationX(AndroidUtilities.lerp(avX, 0f, avatarAnimationProgress));
                 avatarContainer.setTranslationY(AndroidUtilities.lerp((float) Math.ceil(avY), 0f, avatarAnimationProgress));
                 float extra = (avatarContainer.getMeasuredWidth() - AndroidUtilities.dp(42)) * avatarScale;
                 timeItem.setTranslationX(avatarContainer.getX() + AndroidUtilities.dp(16) + extra);
