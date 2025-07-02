@@ -5759,8 +5759,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         onlineTextView[1].setTextColor(ColorUtils.blendARGB(applyPeerColor(statusColor, true, online), 0xB3FFFFFF, value));
         if (extraHeight > AndroidUtilities.dp(EXTRA_HEIGHT)) {
             nameTextView[1].setPivotY(AndroidUtilities.lerp(0, nameTextView[1].getMeasuredHeight(), value));
-            nameTextView[1].setScaleX(AndroidUtilities.lerp(1.12f, 1.67f, value));
-            nameTextView[1].setScaleY(AndroidUtilities.lerp(1.12f, 1.67f, value));
+            nameTextView[1].setScaleX(AndroidUtilities.lerp(1.36f, 1.67f, value));
+            nameTextView[1].setScaleY(AndroidUtilities.lerp(1.36f, 1.67f, value));
         }
         if (showStatusButton != null) {
             showStatusButton.setBackgroundColor(ColorUtils.blendARGB(Theme.multAlpha(Theme.adaptHSV(actionBarBackgroundColor, +0.18f, -0.1f), 0.5f), 0x23ffffff, currentExpandAnimatorValue));
@@ -7308,10 +7308,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (openAnimationInProgress && playProfileAnimation == 2) {
                     additionalTranslationY = -(1.0f - avatarAnimationProgress) * AndroidUtilities.dp(50);
                 }
-                onlineX = AndroidUtilities.dpf2(16f) - onlineTextView[1].getLeft();
                 nameTextView[1].setTranslationX(AndroidUtilities.dpf2(18f) - nameTextView[1].getLeft());
                 nameTextView[1].setTranslationY(newTop + h - AndroidUtilities.dpf2(38f) - nameTextView[1].getBottom() + additionalTranslationY);
-                onlineTextView[1].setTranslationX(onlineX + customPhotoOffset);
+                onlineTextView[1].setTranslationX(AndroidUtilities.dpf2(16f) - onlineTextView[1].getLeft() + customPhotoOffset);
                 onlineTextView[1].setTranslationY(newTop + h - AndroidUtilities.dpf2(18f) - onlineTextView[1].getBottom() + additionalTranslationY);
                 mediaCounterTextView.setTranslationX(onlineTextView[1].getTranslationX());
                 mediaCounterTextView.setTranslationY(onlineTextView[1].getTranslationY());
