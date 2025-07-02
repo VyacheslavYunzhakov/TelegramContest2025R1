@@ -7235,6 +7235,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
     float startX = 0f;
     float startY = 0f;
+    float startOnlineY = 0f;
+    float startNameY = 0f;
 
     float AVATAR_ENLARGE_SIZE = 10f;
 
@@ -7374,6 +7376,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             if (startY == 0f) {
                 startY = avatarY;
             }
+            if (startNameY == 0f && startOnlineY == 0f) {
+                startNameY = nameY;
+                startOnlineY = onlineY;
+            }
             float targetTranslation = screenCenterX - avatarHalf - AVATAR_LEFT_MARGIN * density;
             float factor = Math.min(expandProgress / 0.2f, 1f);
             avatarY = startY + AndroidUtilities.dp(10)*factor;
@@ -7385,13 +7391,15 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
 
             if (expandAnimator == null || !expandAnimator.isRunning()) {
-                float yTranslation = AndroidUtilities.dp(20)*factor + AVATAR_ENLARGE_SIZE*factor;
+                float yTranslation = AndroidUtilities.dp(20)*factor + AVATAR_ENLARGE_SIZE * factor;
+                nameY =  startNameY + yTranslation;
+                onlineY =  startOnlineY + yTranslation;
                 nameTextView[1].setTranslationX(nameX);
-                nameTextView[1].setTranslationY(nameY + yTranslation);
+                nameTextView[1].setTranslationY(nameY);
                 onlineTextView[1].setTranslationX(onlineX + customPhotoOffset);
-                onlineTextView[1].setTranslationY(onlineY + yTranslation);
+                onlineTextView[1].setTranslationY(onlineY );
                 mediaCounterTextView.setTranslationX(onlineX);
-                mediaCounterTextView.setTranslationY(onlineY + yTranslation);
+                mediaCounterTextView.setTranslationY(onlineY);
                 updateCollectibleHint();
             }
         }
