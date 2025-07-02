@@ -5743,7 +5743,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
         nameTextView[1].setTranslationX(nameTextViewX);
         nameTextView[1].setTranslationY(nameTextViewY);
-        onlineTextView[1].setTranslationX(onlineTextViewX + customPhotoOffset);
+        onlineTextView[1].setTranslationX(onlineTextViewX);
         onlineTextView[1].setTranslationY(onlineTextViewY);
         mediaCounterTextView.setTranslationX(onlineTextViewX);
         mediaCounterTextView.setTranslationY(onlineTextViewY);
@@ -7219,7 +7219,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 nameTextView[a].setTranslationX(nameX);
                 nameTextView[a].setTranslationY(nameY);
 
-                onlineTextView[a].setTranslationX(onlineX + customPhotoOffset);
+                onlineTextView[a].setTranslationX(onlineX);
                 onlineTextView[a].setTranslationY(onlineY);
                 if (a == 1) {
                     mediaCounterTextView.setTranslationX(onlineX);
@@ -7312,7 +7312,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
                 nameTextView[1].setTranslationX(AndroidUtilities.dpf2(18f) - nameTextView[1].getLeft());
                 nameTextView[1].setTranslationY(newTop + h - AndroidUtilities.dpf2(38f) - nameTextView[1].getBottom() + additionalTranslationY);
-                onlineTextView[1].setTranslationX(AndroidUtilities.dpf2(16f) - onlineTextView[1].getLeft() + customPhotoOffset);
+                onlineTextView[1].setTranslationX(AndroidUtilities.dpf2(16f) - onlineTextView[1].getLeft());
                 onlineTextView[1].setTranslationY(newTop + h - AndroidUtilities.dpf2(18f) - onlineTextView[1].getBottom() + additionalTranslationY);
                 mediaCounterTextView.setTranslationX(onlineTextView[1].getTranslationX());
                 mediaCounterTextView.setTranslationY(onlineTextView[1].getTranslationY());
@@ -7396,7 +7396,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 onlineY =  startOnlineY + yTranslation;
                 nameTextView[1].setTranslationX(nameX);
                 nameTextView[1].setTranslationY(nameY);
-                onlineTextView[1].setTranslationX(onlineX + customPhotoOffset);
+                onlineTextView[1].setTranslationX(onlineX);
                 onlineTextView[1].setTranslationY(onlineY );
                 mediaCounterTextView.setTranslationX(onlineX);
                 mediaCounterTextView.setTranslationY(onlineY);
@@ -7707,7 +7707,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         nameTextView[a].setTranslationX(nameX);
                         nameTextView[a].setTranslationY(nameY);
 
-                        onlineTextView[a].setTranslationX(onlineX + customPhotoOffset);
+                        onlineTextView[a].setTranslationX(onlineX);
                         onlineTextView[a].setTranslationY(onlineY);
                         if (a == 1) {
                             mediaCounterTextView.setTranslationX(onlineX);
@@ -14032,7 +14032,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     onlineTextView[2].setAlpha(currentExpandAnimatorValue);
                     onlineTextView[3].setAlpha(1f - currentExpandAnimatorValue);
                     //  onlineTextView[1].setAlpha(1f - expandProgress);
-                    onlineTextView[1].setTranslationX(onlineX + customPhotoOffset);
+                    onlineTextView[1].setTranslationX(onlineX);
                     avatarContainer2.invalidate();
                     if (showStatusButton != null) {
                         showStatusButton.setAlpha2(1f - currentExpandAnimatorValue);
