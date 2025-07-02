@@ -9950,7 +9950,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         onlineTextView[a].setText(textView.getText());
                     }
                 } else {
-                    onlineTextView[a].setText(newString2);
+                    setTextWithPositioning(a, newString2);
                 }
                 onlineTextView[a].setDrawablePadding(dp(9));
                 onlineTextView[a].setRightDrawableInside(true);
@@ -10425,6 +10425,18 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             updateQrItemVisibility(true);
         }
         AndroidUtilities.runOnUIThread(this::updateEmojiStatusEffectPosition);
+    }
+
+    private void setTextWithPositioning(int a, String text) {
+        float screenCenterX = displayMetrics.widthPixels / 2f;
+        float v = TEXTS_LEFT_MARGIN - (a == 1 || a == 2 || a == 3 ? 4 : 0);
+        if (onlineX == (screenCenterX - onlineTextView[a].totalWidth / 2f - v * density)){
+            onlineTextView[a].setText(text);
+            onlineX = (screenCenterX - onlineTextView[a].getTextWidth() / 2f - v * density);
+            onlineTextView[a].setTranslationX(onlineX);
+        } else {
+            onlineTextView[a].setText(text);
+        }
     }
 
     private void updatedPeerColor() {
