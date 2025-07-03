@@ -7186,7 +7186,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             giftsView.invalidate();
         }
         nameScale = 1.0f + 0.36f * diff;
-        float screenCenterX = displayMetrics.widthPixels / 2f;
+        float screenCenterX = AndroidUtilities.isTablet() ? AndroidUtilities.dp(490/2f) : displayMetrics.widthPixels / 2f;
         float avatarHalf = START_AVATAR_SIZE * density * avatarScale / 2f;
         float targetTranslation = screenCenterX - avatarHalf - AVATAR_LEFT_MARGIN * density;
 
@@ -7372,7 +7372,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
 
 
-            float screenCenterX = displayMetrics.widthPixels / 2f;
+            float screenCenterX = AndroidUtilities.isTablet() ? AndroidUtilities.dp(490/2f) : displayMetrics.widthPixels / 2f;
             float avatarHalf = START_AVATAR_SIZE * density * avatarScale / 2f;
             if (startY == 0f) {
                 startY = avatarY;
@@ -7587,7 +7587,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
             float yAdjustmentFixated = AndroidUtilities.dp(7.5f)*(1-diff);
 
-            float screenCenterX = displayMetrics.widthPixels / 2f;
+            float screenCenterX = AndroidUtilities.isTablet() ? AndroidUtilities.dp(490/2f) : displayMetrics.widthPixels / 2f;
 
             float avatarHalf = START_AVATAR_SIZE * density * avatarScale / 2f;
 
@@ -10429,7 +10429,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void setTextWithPositioning(int a, String text) {
-        float screenCenterX = displayMetrics.widthPixels / 2f;
+        float screenCenterX = AndroidUtilities.isTablet() ? AndroidUtilities.dp(490/2f) : displayMetrics.widthPixels / 2f;
         float v = TEXTS_LEFT_MARGIN - (a == 1 || a == 2 || a == 3 ? 4 : 0);
         if (onlineX == (screenCenterX - onlineTextView[a].totalWidth / 2f - v * density)){
             onlineTextView[a].setText(text);
