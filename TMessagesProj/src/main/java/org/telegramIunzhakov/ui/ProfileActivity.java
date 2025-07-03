@@ -3725,6 +3725,16 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             }
                         }
                     }
+                    if (extraHeight < AndroidUtilities.dp(EXTRA_HEIGHT)) {
+                        final View view = layoutManager.findViewByPosition(0);
+                        if (view != null) {
+                            if (extraHeight/AndroidUtilities.dp(EXTRA_HEIGHT)>= 0.5f) {
+                                listView.smoothScrollBy(0, view.getTop() - AndroidUtilities.dp(EXTRA_HEIGHT), CubicBezierInterpolator.EASE_OUT_QUINT);
+                            } else {
+                                listView.smoothScrollBy(0, view.getTop(), CubicBezierInterpolator.EASE_OUT_QUINT);
+                            }
+                        }
+                    }
                 }
                 return result;
             }
