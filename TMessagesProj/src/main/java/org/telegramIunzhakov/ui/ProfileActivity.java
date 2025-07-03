@@ -7187,7 +7187,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         }
 
         float yAdjustmentFixated = AndroidUtilities.dp(7.5f)*(1-diff);
-        avatarY = viewTop * diff;
+        avatarY = viewTop * diff - (START_AVATAR_SIZE + 2) * (1-diff) * density;
         avatarScale = (START_AVATAR_SIZE + (END_AVATAR_SIZE-START_AVATAR_SIZE) * diff) / START_AVATAR_SIZE;
         if (storyView != null) {
             storyView.invalidate();
