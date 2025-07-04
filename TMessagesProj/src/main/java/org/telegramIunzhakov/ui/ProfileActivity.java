@@ -7795,16 +7795,21 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     starFgItem.setTranslationX(avatarContainer.getX() + AndroidUtilities.dp(28) + extra);
                     starFgItem.setTranslationY(avatarContainer.getY() + AndroidUtilities.dp(24) + extra);
                 }
-                nameX = (screenCenterX - (nameTextView[1].totalWidth * nameScale)/ 2f - TEXTS_LEFT_MARGIN * density) * diff;
+
                 nameY =  viewTop + ((END_AVATAR_SIZE + 7f) * AndroidUtilities.density) * diff - yAdjustmentFixated;
                 onlineY = nameY + AndroidUtilities.dp(24)*nameScale;
                 if (showStatusButton != null) {
                     showStatusButton.setAlpha((int) (0xFF * diff));
                 }
                 for (int a = 0; a < nameTextView.length; a++) {
-                    onlineX = (screenCenterX - onlineTextView[a].totalWidth / 2f - (TEXTS_LEFT_MARGIN - (a == 1 || a == 2 || a == 3? 4 : 0)) * density) * diff;
+                    if (onlineTextView[a].totalWidth != 0) {
+                        onlineX = (screenCenterX - onlineTextView[a].totalWidth / 2f - (TEXTS_LEFT_MARGIN - (a == 1 || a == 2 || a == 3 ? 4 : 0)) * density) * diff;
+                    }
                     if (nameTextView[a] == null) {
                         continue;
+                    }
+                    if (nameTextView[a].totalWidth != 0) {
+                        nameX = (screenCenterX - (nameTextView[a].totalWidth * nameScale) / 2f - TEXTS_LEFT_MARGIN * density) * diff;
                     }
                     if (expandAnimator == null || !expandAnimator.isRunning()) {
                         nameTextView[a].setTranslationX(nameX);
