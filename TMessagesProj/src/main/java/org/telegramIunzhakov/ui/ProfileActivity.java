@@ -793,6 +793,14 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private ButtonWithCounterView[] bottomButton;
     private Runnable applyBulletin;
 
+    private final Path metaballsPath = new Path();
+    private final Paint mergePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Point p1 = new Point(), p2 = new Point(), p3 = new Point(), p4 = new Point(), h1 = new Point(), h2 = new Point(), h3 = new Point(), h4 = new Point();
+
+    // Сюда внешне будем передавать параметры анимации:
+    private float diff = 1f;
+    private float viewTop = 0f;
+
     public static ProfileActivity of(long dialogId) {
         Bundle bundle = new Bundle();
         if (dialogId >= 0) {
@@ -4841,9 +4849,106 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         avatarContainer2 = new FrameLayout(context) {
 
             CanvasButton canvasButton;
+            private final Paint debugFill  = new Paint();
+            private final Paint debugStroke= new Paint();
 
+            {
+                // Настраиваем краску для фона (прозрачный красный)
+                debugFill.setStyle(Paint.Style.FILL);
+                debugFill.setColor(0x88FF0000);
+                // Настраиваем краску для кружков (зелёный обвод)
+                debugStroke.setStyle(Paint.Style.STROKE);
+                debugStroke.setStrokeWidth(AndroidUtilities.dp(2));
+                debugStroke.setColor(Color.GREEN);
+            }
+            private final AnimatedFloat recordCx = new AnimatedFloat(this, 0, 750, CubicBezierInterpolator.EASE_OUT_QUINT);
             @Override
             protected void dispatchDraw(Canvas canvas) {
+
+                float scale = avatarContainer.getScaleX();
+                float w = avatarContainer.getWidth() * scale;
+                float h = avatarContainer.getHeight() * scale;
+                float avatarCx = avatarContainer.getX() + w / 2f;
+                float avatarCy = avatarContainer.getY() + h / 2f;
+                float avatarR = w / 2f;
+
+                final float lineWidth = AndroidUtilities.dp(100);
+                final float lineThickness = AndroidUtilities.dp(2);
+                final float lineTopY = 0 - lineThickness;
+
+                final float v = diff;
+
+                p1.set((int)(avatarCx - lineWidth / 2), (int)lineTopY);
+                p2.set((int)(avatarCx + lineWidth / 2), (int)lineTopY);
+
+                final double topAngle = -Math.PI / 2;
+                final double spreadAngle = Math.PI / 3 * (1/v);
+
+                // Пересчитанные точки на аватаре - ближе к центру
+                double leftCircleAngle = topAngle - spreadAngle;
+                double rightCircleAngle = topAngle + spreadAngle;
+
+                getVector(avatarCx, avatarCy, leftCircleAngle, avatarR, p3);
+                getVector(avatarCx, avatarCy, rightCircleAngle, avatarR, p4);
+
+                final float vaseCurveFactor = 1.5f;
+
+                h1.set(
+                        (int)(p1.x + (avatarCx - p1.x) * 0.3f * v),
+                        (int)(p1.y + Math.min(avatarR * 0.8f, avatarCy * 0.5f) * v)
+                );
+
+                h2.set(
+                        (int)(p2.x + (avatarCx - p2.x) * 0.3f * v),
+                        (int)(p2.y + Math.min(avatarR * 0.8f, avatarCy * 0.5f) * v)
+                );
+
+                h3.set(
+                        (int)(p3.x + (p1.x - p3.x) * 0.3f * vaseCurveFactor * v),
+                        (int)(p3.y - avatarR * 0.7f * v)
+                );
+
+                h4.set(
+                        (int)(p4.x + (p2.x - p4.x) * 0.4f * vaseCurveFactor * v),
+                        (int)(p4.y - avatarR * 0.7f * v)
+                );
+
+                if (diff < 0.5f) {
+                    metaballsPath.rewind();
+                    metaballsPath.moveTo(p1.x, p1.y);
+
+                    metaballsPath.cubicTo(
+                            h1.x, h1.y,
+                            h3.x, h3.y,
+                            p3.x, p3.y
+                    );
+
+                    metaballsPath.cubicTo(
+                            p3.x + (p4.x - p3.x) * 0.5f, p3.y - avatarR * 0.5f * v,
+                            p4.x - (p4.x - p3.x) * 0.5f, p4.y - avatarR * 0.5f * v,
+                            p4.x, p4.y
+                    );
+
+                    metaballsPath.cubicTo(
+                            h4.x, h4.y,
+                            h2.x, h2.y,
+                            p2.x, p2.y
+                    );
+
+                    metaballsPath.lineTo(p1.x, p1.y);
+                    metaballsPath.close();
+
+                    mergePaint.setAlpha((int) (0xFF));
+                    canvas.drawPath(metaballsPath, mergePaint);
+
+                    canvas.drawRect(
+                            avatarCx - lineWidth / 2,
+                            lineTopY,
+                            avatarCx + lineWidth / 2,
+                            lineTopY + lineThickness,
+                            mergePaint
+                    );
+                }
                 super.dispatchDraw(canvas);
                 if (transitionOnlineText != null) {
                     canvas.save();
@@ -4887,6 +4992,15 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         }
                     }
                 }
+            }
+
+            private void getVector(float cx, float cy, double a, float r, Point point) {
+                point.x = (int) (cx + Math.cos(a) * r);
+                point.y = (int) (cy + Math.sin(a) * r);
+            }
+
+            private float dist(Point a, Point b) {
+                return com.google.zxing.common.detector.MathUtils.distance(a.x, a.y, b.x, b.y);
             }
 
             @Override
@@ -7181,11 +7295,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void avatarAnimationFromTopToCenter() {
-        final float diff = Math.min(1f, extraHeight / AndroidUtilities.dp(EXTRA_HEIGHT));
+        diff = Math.min(1f, extraHeight / AndroidUtilities.dp(EXTRA_HEIGHT));
         if (viewTop == 0) {
             viewTop = ActionBar.getCurrentActionBarHeight() - dp(42) + (Build.VERSION.SDK_INT >= 21 && actionBar.getOccupyStatusBar()  ? AndroidUtilities.statusBarHeight : 0);
         }
-
+        avatarContainer2.invalidate();;
         float yAdjustmentFixated = AndroidUtilities.dp(7.5f)*(1-diff);
         avatarY = viewTop * diff - (START_AVATAR_SIZE + 2) * (1-diff) * density;
         avatarScale = (START_AVATAR_SIZE + (END_AVATAR_SIZE-START_AVATAR_SIZE) * diff) / START_AVATAR_SIZE;
@@ -7499,7 +7613,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     }
 
     float nameScale = 1f;
-    int viewTop = 0;
+
     private void needLayout(boolean animated) {
         final int newTop = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight();
         if (viewTop == 0) {
