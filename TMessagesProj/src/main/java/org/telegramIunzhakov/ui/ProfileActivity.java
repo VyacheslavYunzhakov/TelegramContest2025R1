@@ -17,6 +17,7 @@ import static org.telegramIunzhakov.messenger.ContactsController.PRIVACY_RULES_T
 import static org.telegramIunzhakov.messenger.LocaleController.formatPluralString;
 import static org.telegramIunzhakov.messenger.LocaleController.formatString;
 import static org.telegramIunzhakov.messenger.LocaleController.getString;
+import static org.telegramIunzhakov.messenger.Utilities.clamp;
 import static org.telegramIunzhakov.ui.Stars.StarsIntroActivity.formatStarsAmountShort;
 import static org.telegramIunzhakov.ui.bots.AffiliateProgramFragment.percents;
 
@@ -328,7 +329,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private final static float END_AVATAR_SIZE = 98f;
     private final static float AVATAR_LEFT_MARGIN = 64f;
     private final static float TEXTS_LEFT_MARGIN= 118f;
-    DisplayMetrics dm = Resources.getSystem().getDisplayMetrics();
+    private final Paint mainPaint =          new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final static int WHITE = 0xFFFFFFFF;
+    private final static int BLACK = 0x00000000;
 
     private RecyclerListView listView;
     private RecyclerListView searchListView;
@@ -4849,22 +4852,13 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         avatarContainer2 = new FrameLayout(context) {
 
             CanvasButton canvasButton;
-            private final Paint debugFill  = new Paint();
-            private final Paint debugStroke= new Paint();
+            final AnimatedFloat touchT = new AnimatedFloat(this, 0, 350, CubicBezierInterpolator.EASE_OUT_QUINT);
 
-            {
-                // Настраиваем краску для фона (прозрачный красный)
-                debugFill.setStyle(Paint.Style.FILL);
-                debugFill.setColor(0x88FF0000);
-                // Настраиваем краску для кружков (зелёный обвод)
-                debugStroke.setStyle(Paint.Style.STROKE);
-                debugStroke.setStrokeWidth(AndroidUtilities.dp(2));
-                debugStroke.setColor(Color.GREEN);
-            }
-            private final AnimatedFloat recordCx = new AnimatedFloat(this, 0, 750, CubicBezierInterpolator.EASE_OUT_QUINT);
+
             @Override
             protected void dispatchDraw(Canvas canvas) {
 
+                final float touchT = this.touchT.set(1);
                 float scale = avatarContainer.getScaleX();
                 float w = avatarContainer.getWidth() * scale;
                 float h = avatarContainer.getHeight() * scale;
@@ -4872,82 +4866,66 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 float avatarCy = avatarContainer.getY() + h / 2f;
                 float avatarR = w / 2f;
 
-                final float lineWidth = AndroidUtilities.dp(100);
-                final float lineThickness = AndroidUtilities.dp(2);
-                final float lineTopY = 0 - lineThickness;
+                final float r = AndroidUtilities.dp(START_AVATAR_SIZE)*2 / diff;
+                final float y1 = -r;
+                final float handleSize = 2.4f;
+                mainPaint.setColor(ColorUtils.blendARGB(avatarContainer.getSolidColor(), BLACK, (1.0f - diff)));
 
-                final float v = diff;
+                final float touchCenterT96 = clamp((avatarCy - y1) / dp(64), 1, -1);
+                float rad = lerp(lerp(dp(32), dp(7), 1), dp(32), 1);
 
-                p1.set((int)(avatarCx - lineWidth / 2), (int)lineTopY);
-                p2.set((int)(avatarCx + lineWidth / 2), (int)lineTopY);
+                final float v = clamp(1f - touchT * Math.abs(touchCenterT96) / 1.3f, 1, 0);
 
-                final double topAngle = -Math.PI / 2;
-                final double spreadAngle = Math.PI / 3 * (1/v);
+                double d = Math.abs(avatarCy - y1);
 
-                // Пересчитанные точки на аватаре - ближе к центру
-                double leftCircleAngle = topAngle - spreadAngle;
-                double rightCircleAngle = topAngle + spreadAngle;
+                double u1, u2;
+                if (d < r + avatarR) {
+                    u1 = Math.acos((r * r + d * d - avatarR * avatarR) / (2 * r * d));
+                    u2 = Math.acos((avatarR * avatarR + d * d - r * r) / (2 * avatarR * d));
+                } else {
+                    u1 = u2 = 0;
+                }
 
-                getVector(avatarCx, avatarCy, leftCircleAngle, avatarR, p3);
-                getVector(avatarCx, avatarCy, rightCircleAngle, avatarR, p4);
+                final double angleBetweenCenters = (avatarCy > y1) ? Math.PI/2 : -Math.PI/2;
+                final double maxSpread = (float) Math.acos((r - avatarR) / d);
 
-                final float vaseCurveFactor = 1.5f;
+                double angle1 = angleBetweenCenters + u1 + (maxSpread - u1) * v;
+                double angle2 = angleBetweenCenters - u1 - (maxSpread - u1) * v;
+                double angle3 = angleBetweenCenters + Math.PI - u2 - (Math.PI - u2 - maxSpread) * v;
+                double angle4 = angleBetweenCenters - Math.PI + u2 + (Math.PI - u2 - maxSpread) * v;
 
-                h1.set(
-                        (int)(p1.x + (avatarCx - p1.x) * 0.3f * v),
-                        (int)(p1.y + Math.min(avatarR * 0.8f, avatarCy * 0.5f) * v)
-                );
+                getVector(avatarCx, y1, angle1, r, p1);
+                getVector(avatarCx, y1, angle2, r, p2);
+                getVector(avatarCx, avatarCy, angle3, avatarR, p3);
+                getVector(avatarCx, avatarCy, angle4, avatarR, p4);
 
-                h2.set(
-                        (int)(p2.x + (avatarCx - p2.x) * 0.3f * v),
-                        (int)(p2.y + Math.min(avatarR * 0.8f, avatarCy * 0.5f) * v)
-                );
+                final float totalRadius = r + avatarR;
+                final float d2Base = Math.min(v * handleSize, dist(p1, p3) / totalRadius);
+                final float d2 = (float) (d2Base * Math.min(1, (d * 2) / (r + avatarR)));
 
-                h3.set(
-                        (int)(p3.x + (p1.x - p3.x) * 0.3f * vaseCurveFactor * v),
-                        (int)(p3.y - avatarR * 0.7f * v)
-                );
+                final float r1 = r * d2;
+                final float r2 = avatarR * d2;
 
-                h4.set(
-                        (int)(p4.x + (p2.x - p4.x) * 0.4f * vaseCurveFactor * v),
-                        (int)(p4.y - avatarR * 0.7f * v)
-                );
+                getVector(p1.x, p1.y, angle1 - Math.PI / 2, r1, h1);
+                getVector(p2.x, p2.y, angle2 + Math.PI / 2, r1, h2);
+                getVector(p3.x, p3.y, angle3 + Math.PI / 2, r2, h3);
+                getVector(p4.x, p4.y, angle4 - Math.PI / 2, r2, h4);
 
-                if (diff < 0.5f) {
+                float alpha = 1;
+
+                if (diff < 0.6) {
                     metaballsPath.rewind();
                     metaballsPath.moveTo(p1.x, p1.y);
-
-                    metaballsPath.cubicTo(
-                            h1.x, h1.y,
-                            h3.x, h3.y,
-                            p3.x, p3.y
-                    );
-
-                    metaballsPath.cubicTo(
-                            p3.x + (p4.x - p3.x) * 0.5f, p3.y - avatarR * 0.5f * v,
-                            p4.x - (p4.x - p3.x) * 0.5f, p4.y - avatarR * 0.5f * v,
-                            p4.x, p4.y
-                    );
-
-                    metaballsPath.cubicTo(
-                            h4.x, h4.y,
-                            h2.x, h2.y,
-                            p2.x, p2.y
-                    );
-
+                    metaballsPath.cubicTo(h1.x, h1.y, h3.x, h3.y, p3.x, p3.y);
+                    metaballsPath.lineTo(p4.x, p4.y);
+                    metaballsPath.cubicTo(h4.x, h4.y, h2.x, h2.y, p2.x, p2.y);
                     metaballsPath.lineTo(p1.x, p1.y);
-                    metaballsPath.close();
 
-                    mergePaint.setAlpha((int) (0xFF));
-                    canvas.drawPath(metaballsPath, mergePaint);
+                    mainPaint.setAlpha((int) (0xFF * alpha));
+                    canvas.drawPath(metaballsPath, mainPaint);
 
-                    canvas.drawRect(
-                            avatarCx - lineWidth / 2,
-                            lineTopY,
-                            avatarCx + lineWidth / 2,
-                            lineTopY + lineThickness,
-                            mergePaint
-                    );
+                    AndroidUtilities.rectTmp.set(avatarCx - r, y1 - r, avatarCx + r, y1 + r);
+                    canvas.drawRoundRect(AndroidUtilities.rectTmp, rad, rad, mainPaint);
                 }
                 super.dispatchDraw(canvas);
                 if (transitionOnlineText != null) {
