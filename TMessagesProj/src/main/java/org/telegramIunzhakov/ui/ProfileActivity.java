@@ -41,7 +41,6 @@ import android.content.pm.ConfigurationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.database.DataSetObserver;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -79,7 +78,6 @@ import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.URLSpan;
 import android.text.util.Linkify;
-import android.util.DisplayMetrics;
 import android.util.Property;
 import android.util.SparseArray;
 import android.util.SparseIntArray;
@@ -7337,9 +7335,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     }
 
     float startX = 0f;
-    float startY = 0f;
-    float startOnlineY = 0f;
-    float startNameY = 0f;
+    float centerAvatarY = 0f;
+    float centerOnlineY = 0f;
+    float centerNameY = 0f;
 
     float AVATAR_ENLARGE_SIZE = 10f;
 
@@ -7476,16 +7474,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
             float screenCenterX = AndroidUtilities.isTablet() ? AndroidUtilities.dp(490/2f) : displayMetrics.widthPixels / 2f;
             float avatarHalf = START_AVATAR_SIZE * density * avatarScale / 2f;
-            if (startY == 0f) {
-                startY = avatarY;
-            }
-            if (startNameY == 0f && startOnlineY == 0f) {
-                startNameY = nameY;
-                startOnlineY = onlineY;
-            }
+
             float targetTranslation = screenCenterX - avatarHalf - AVATAR_LEFT_MARGIN * density;
             float factor = Math.min(expandProgress / 0.2f, 1f);
-            avatarY = startY + AndroidUtilities.dp(10)*factor;
+            avatarY = centerAvatarY + AndroidUtilities.dp(10)*factor;
             avatarX = targetTranslation;
             avatarContainer.setScaleX(avatarScale);
             avatarContainer.setScaleY(avatarScale);
@@ -7495,8 +7487,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
             if (expandAnimator == null || !expandAnimator.isRunning()) {
                 float yTranslation = AndroidUtilities.dp(20)*factor + AVATAR_ENLARGE_SIZE * factor;
-                nameY =  startNameY + yTranslation;
-                onlineY =  startOnlineY + yTranslation;
+                nameY =  centerNameY + yTranslation;
+                onlineY =  centerOnlineY + yTranslation;
                 nameTextView[1].setTranslationX(nameX);
                 nameTextView[1].setTranslationY(nameY);
                 onlineTextView[1].setTranslationX(onlineX);
@@ -7839,7 +7831,15 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             overlaysLp.height = (int) (extraHeight + newTop);
             overlaysView.requestLayout();
         }
-
+        if (diff == 1) {
+            if (centerAvatarY == 0f) {
+                centerAvatarY = avatarY;
+            }
+            if (centerNameY == 0f && centerOnlineY == 0f) {
+                centerNameY = nameY;
+                centerOnlineY = onlineY;
+            }
+        }
         updateEmojiStatusEffectPosition();
     }
 
