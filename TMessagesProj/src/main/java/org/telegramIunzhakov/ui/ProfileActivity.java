@@ -799,7 +799,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private final Paint mergePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Point p1 = new Point(), p2 = new Point(), p3 = new Point(), p4 = new Point(), h1 = new Point(), h2 = new Point(), h3 = new Point(), h4 = new Point();
 
-    // Сюда внешне будем передавать параметры анимации:
     private float viewTop = 0f;
 
     public static ProfileActivity of(long dialogId) {
@@ -5558,14 +5557,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     public void setupButtonsContainer(FrameLayout buttonsContainer, List<ButtonData> allButtons) {
         buttonsContainer.removeAllViews();
 
-        // Фильтруем кнопки по видимости и сортируем по приоритету
         List<ButtonData> visibleButtons = new ArrayList<>(allButtons);
         Collections.sort(visibleButtons, (b1, b2) -> Integer.compare(b1.getPriority(), b2.getPriority()));
 
-        // Берем максимум 4 кнопки
         List<ButtonData> buttonsToShow = visibleButtons.subList(0, Math.min(visibleButtons.size(), 4));
 
-        // Создаем горизонтальный контейнер
         LinearLayout horizontalLayout = new LinearLayout(buttonsContainer.getContext());
         horizontalLayout.setLayoutParams(new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
@@ -5575,7 +5571,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         horizontalLayout.setWeightSum(buttonsToShow.size());
         buttonsContainer.addView(horizontalLayout);
 
-        // Добавляем кнопки
         int margin = dp(8);
         LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
                 0,
@@ -5597,7 +5592,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             return false;
         }
 
-        // Проверка для профиля бота
         if (isBot) {
             switch (buttonType) {
                 case MESSAGE:
@@ -5610,7 +5604,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
         }
 
-        // Проверка для обычного профиля или бизнес-аккаунта
         if (userId != 0) {
             TLRPC.User user = getMessagesController().getUser(userId);
             if (user == null) return false;
@@ -5637,7 +5630,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
         }
 
-        // Проверка для каналов и групп
         if (chatId != 0) {
             TLRPC.Chat chat = getMessagesController().getChat(chatId);
             if (chat == null) return false;
@@ -5646,7 +5638,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             boolean joined = !chat.left && !chat.kicked;
             boolean isMegagroup = isChannel && chat.megagroup;
 
-            // Проверка для владельца live stream канала
             if (isChannel && !isMegagroup &&
                     (chat.creator || (chat.admin_rights != null && chat.admin_rights.edit_stories))) {
                 switch (buttonType) {
@@ -5659,7 +5650,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
             }
 
-            // Пользователь не вступил, но может вступить
             if (!joined && ChatObject.isPublic(chat)) {
                 switch (buttonType) {
                     case JOIN:
@@ -5679,7 +5669,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         return false;
                 }
             }
-            // Пользователь уже вступил
             else if (joined) {
                 boolean writeButtonVisible = (imageUpdater == null || setAvatarRow == -1) &&
                         ChatObject.isChannel(chat) &&
@@ -5688,12 +5677,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         chatInfo.linked_chat_id != 0 &&
                         infoHeaderRow != -1;
 
-                // Условия для voice chat
                 boolean voiceChatVisible = ChatObject.canManageCalls(chat) &&
                         chatInfo != null &&
                         chatInfo.call == null;
 
-                // Условия для stories
                 boolean storiesVisible = chat.creator ||
                         (chat.admin_rights != null && chat.admin_rights.edit_stories);
 
@@ -5717,19 +5704,16 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     case VOICE_CHAT:
                         return voiceChatVisible;
                     case STORY:
-                        return storiesVisible && !isMegagroup; // Stories только для обычных каналов
+                        return storiesVisible && !isMegagroup;
                     default:
                         return false;
                 }
             }
         }
-
-        // Проверка для обычной группы (не канал)
         if (chatId != 0 && !ChatObject.isChannel(getMessagesController().getChat(chatId))) {
             TLRPC.Chat chat = getMessagesController().getChat(chatId);
             if (chat == null) return false;
 
-            // Условия для voice chat в группе
             boolean voiceChatVisible = ChatObject.canManageCalls(chat) &&
                     chatInfo != null &&
                     chatInfo.call == null;
@@ -5779,13 +5763,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void messageAction() {
-        // Открытие чата с пользователем
         if (userId != 0) {
             Bundle args = new Bundle();
             args.putLong("user_id", userId);
             presentFragment(new ChatActivity(args));
         }
-        // Для групп - открытие существующего чата
         else if (chatId != 0) {
             Bundle args = new Bundle();
             args.putLong("chat_id", chatId);
@@ -5886,7 +5868,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void stopAction() {
-        // Для ботов - остановка/перезапуск
         if (isBot && userId != 0) {
             TLRPC.User user = getMessagesController().getUser(userId);
             if (user == null) return;
@@ -5967,7 +5948,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         return buttons;
     }
 
-    // Добавлены ресурсы для новых кнопок
     private int getDrawableResource(ButtonType type) {
         switch (type) {
             case VOICE_CHAT: return R.drawable.live_stream;
@@ -5987,7 +5967,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         }
     }
 
-    // Добавлены тексты для новых кнопок
     private String getButtonText(ButtonType type) {
         switch (type) {
             case VOICE_CHAT: return "Voice Chat";
@@ -6007,7 +5986,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         }
     }
 
-    // Добавлены обработчики для новых кнопок
     private View.OnClickListener getClickListener(ButtonType type) {
         switch (type) {
             case VOICE_CHAT: return v -> voiceChatAction();
