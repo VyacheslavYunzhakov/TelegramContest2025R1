@@ -799,7 +799,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private final Point p1 = new Point(), p2 = new Point(), p3 = new Point(), p4 = new Point(), h1 = new Point(), h2 = new Point(), h3 = new Point(), h4 = new Point();
 
     // Сюда внешне будем передавать параметры анимации:
-    private float diff = 1f;
     private float viewTop = 0f;
 
     public static ProfileActivity of(long dialogId) {
@@ -4856,6 +4855,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             @Override
             protected void dispatchDraw(Canvas canvas) {
 
+                float diff = Math.min(1f, extraHeight / AndroidUtilities.dp(EXTRA_HEIGHT));
+
                 final float touchT = this.touchT.set(1);
                 float scale = avatarContainer.getScaleX();
                 float w = avatarContainer.getWidth() * scale;
@@ -4911,7 +4912,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
                 float alpha = 1;
 
-                if (diff < 0.6) {
+                if (diff < 0.6 && (expandAnimator == null || !expandAnimator.isRunning() == null || !expandAnimator.isRunning())) {
                     metaballsPath.rewind();
                     metaballsPath.moveTo(p1.x, p1.y);
                     metaballsPath.cubicTo(h1.x, h1.y, h3.x, h3.y, p3.x, p3.y);
@@ -7271,7 +7272,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void avatarAnimationFromTopToCenter() {
-        diff = Math.min(1f, extraHeight / AndroidUtilities.dp(EXTRA_HEIGHT));
+        float diff = Math.min(1f, extraHeight / AndroidUtilities.dp(EXTRA_HEIGHT));
         if (viewTop == 0) {
             viewTop = ActionBar.getCurrentActionBarHeight() - dp(42) + (Build.VERSION.SDK_INT >= 21 && actionBar.getOccupyStatusBar()  ? AndroidUtilities.statusBarHeight : 0);
         }
@@ -7585,6 +7586,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     float nameScale = 1f;
 
     private void needLayout(boolean animated) {
+        float diff = Math.min(1f, extraHeight / AndroidUtilities.dp(EXTRA_HEIGHT));
         final int newTop = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight();
         if (viewTop == 0) {
             viewTop = ActionBar.getCurrentActionBarHeight() - dp(42) + (Build.VERSION.SDK_INT >= 21 && actionBar.getOccupyStatusBar()  ? AndroidUtilities.statusBarHeight : 0);
@@ -7600,7 +7602,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         }
 
         if (avatarContainer != null) {
-            final float diff = Math.min(1f, extraHeight / AndroidUtilities.dp(EXTRA_HEIGHT));
 
             listView.setTopGlowOffset((int) extraHeight);
 
