@@ -342,6 +342,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private SimpleTextView[] onlineTextView = new SimpleTextView[4];
     private AudioPlayerAlert.ClippingTextViewSwitcher mediaCounterTextView;
     private RLottieImageView writeButton;
+    private FrameLayout buttonsContainer;
     private AnimatorSet writeButtonAnimation;
     private AnimatorSet qrItemAnimation;
     private Drawable lockIconDrawable;
@@ -5374,6 +5375,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
         }
 
+        FrameLayout buttonsContainer = new FrameLayout(context);
+        frameLayout.addView(buttonsContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP, 16, 0, 16, 0));
+        List<ButtonData> allButtons = createButtonList();
+        setupButtonsContainer(buttonsContainer, allButtons);
+
         listView.setOnScrollListener(new RecyclerView.OnScrollListener() {
 
             @Override
@@ -5547,6 +5553,478 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         }
 
         return fragmentView;
+    }
+
+    public void setupButtonsContainer(FrameLayout buttonsContainer, List<ButtonData> allButtons) {
+        buttonsContainer.removeAllViews();
+
+        // Фильтруем кнопки по видимости и сортируем по приоритету
+        List<ButtonData> visibleButtons = new ArrayList<>(allButtons);
+        Collections.sort(visibleButtons, (b1, b2) -> Integer.compare(b1.getPriority(), b2.getPriority()));
+
+        // Берем максимум 4 кнопки
+        List<ButtonData> buttonsToShow = visibleButtons.subList(0, Math.min(visibleButtons.size(), 4));
+
+        // Создаем горизонтальный контейнер
+        LinearLayout horizontalLayout = new LinearLayout(buttonsContainer.getContext());
+        horizontalLayout.setLayoutParams(new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+        ));
+        horizontalLayout.setOrientation(LinearLayout.HORIZONTAL);
+        horizontalLayout.setWeightSum(buttonsToShow.size());
+        buttonsContainer.addView(horizontalLayout);
+
+        // Добавляем кнопки
+        int margin = dp(8);
+        LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
+                0,
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                1.0f
+        );
+        buttonParams.setMargins(margin, margin, margin, margin);
+
+        for (ButtonData buttonData : buttonsToShow) {
+            ProfileButton button = new ProfileButton(buttonsContainer.getContext(), buttonData);
+            button.setLayoutParams(buttonParams);
+            horizontalLayout.addView(button);
+        }
+    }
+
+    private boolean shouldShowButton(ButtonType buttonType) {
+        Context context = getContext();
+        if (actionBar == null || otherItem == null) {
+            return false;
+        }
+
+        // Проверка для профиля бота
+        if (isBot) {
+            switch (buttonType) {
+                case MESSAGE:
+                case MUTE:
+                case SHARE:
+                case STOP:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        // Проверка для обычного профиля или бизнес-аккаунта
+        if (userId != 0) {
+            TLRPC.User user = getMessagesController().getUser(userId);
+            if (user == null) return false;
+
+            switch (buttonType) {
+                case MESSAGE:
+                    return !UserObject.isUserSelf(user);
+                case MUTE:
+                    return true;
+                case CALL:
+                    return userInfo != null && userInfo.phone_calls_available;
+                case VIDEO:
+                    return Build.VERSION.SDK_INT >= 18 &&
+                            userInfo != null &&
+                            userInfo.video_calls_available;
+                case GIFT:
+                    return !BuildVars.IS_BILLING_UNAVAILABLE &&
+                            !user.self &&
+                            !user.bot &&
+                            !MessagesController.isSupportUser(user) &&
+                            !getMessagesController().premiumPurchaseBlocked();
+                default:
+                    return false;
+            }
+        }
+
+        // Проверка для каналов и групп
+        if (chatId != 0) {
+            TLRPC.Chat chat = getMessagesController().getChat(chatId);
+            if (chat == null) return false;
+
+            boolean isChannel = ChatObject.isChannel(chat);
+            boolean joined = !chat.left && !chat.kicked;
+            boolean isMegagroup = isChannel && chat.megagroup;
+
+            // Проверка для владельца live stream канала
+            if (isChannel && !isMegagroup &&
+                    (chat.creator || (chat.admin_rights != null && chat.admin_rights.edit_stories))) {
+                switch (buttonType) {
+                    case MUTE:
+                    case STORY:
+                    case GIFT:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
+            // Пользователь не вступил, но может вступить
+            if (!joined && ChatObject.isPublic(chat)) {
+                switch (buttonType) {
+                    case JOIN:
+                        return true;
+                    case MUTE:
+                        return true;
+                    case GIFT:
+                        return !BuildVars.IS_BILLING_UNAVAILABLE &&
+                                !getMessagesController().premiumPurchaseBlocked() &&
+                                chatInfo != null &&
+                                chatInfo.stargifts_available;
+                    case SHARE:
+                        return true;
+                    case REPORT:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+            // Пользователь уже вступил
+            else if (joined) {
+                boolean writeButtonVisible = (imageUpdater == null || setAvatarRow == -1) &&
+                        ChatObject.isChannel(chat) &&
+                        !chat.megagroup &&
+                        chatInfo != null &&
+                        chatInfo.linked_chat_id != 0 &&
+                        infoHeaderRow != -1;
+
+                // Условия для voice chat
+                boolean voiceChatVisible = ChatObject.canManageCalls(chat) &&
+                        chatInfo != null &&
+                        chatInfo.call == null;
+
+                // Условия для stories
+                boolean storiesVisible = chat.creator ||
+                        (chat.admin_rights != null && chat.admin_rights.edit_stories);
+
+                switch (buttonType) {
+                    case MUTE:
+                        return true;
+                    case DISCUSS:
+                        return writeButtonVisible;
+                    case GIFT:
+                        return !BuildVars.IS_BILLING_UNAVAILABLE &&
+                                !getMessagesController().premiumPurchaseBlocked() &&
+                                chatInfo != null &&
+                                chatInfo.stargifts_available;
+                    case SHARE:
+                        return ChatObject.isPublic(chat);
+                    case LEAVE:
+                        return !chat.creator &&
+                                !chat.left &&
+                                !chat.kicked &&
+                                (isMegagroup || !isTopic);
+                    case VOICE_CHAT:
+                        return voiceChatVisible;
+                    case STORY:
+                        return storiesVisible && !isMegagroup; // Stories только для обычных каналов
+                    default:
+                        return false;
+                }
+            }
+        }
+
+        // Проверка для обычной группы (не канал)
+        if (chatId != 0 && !ChatObject.isChannel(getMessagesController().getChat(chatId))) {
+            TLRPC.Chat chat = getMessagesController().getChat(chatId);
+            if (chat == null) return false;
+
+            // Условия для voice chat в группе
+            boolean voiceChatVisible = ChatObject.canManageCalls(chat) &&
+                    chatInfo != null &&
+                    chatInfo.call == null;
+
+            switch (buttonType) {
+                case MESSAGE:
+                    return true;
+                case MUTE:
+                    return true;
+                case VOICE_CHAT:
+                    return voiceChatVisible;
+                case LEAVE:
+                    return !ChatObject.isKickedFromChat(chat) &&
+                            !ChatObject.isLeftFromChat(chat);
+                default:
+                    return false;
+            }
+        }
+
+        return false;
+    }
+
+    private void joinAction() {
+        BaseFragment lastFragment = parentLayout.getLastFragment();
+        getMessagesController().addUserToChat(currentChat.id, getUserConfig().getCurrentUser(), 0, null, ProfileActivity.this, true, () -> {
+            updateRowsIds();
+            if (listAdapter != null) {
+                listAdapter.notifyDataSetChanged();
+            }
+        }, err -> {
+            if (err != null && "INVITE_REQUEST_SENT".equals(err.text)) {
+                SharedPreferences preferences = MessagesController.getNotificationsSettings(currentAccount);
+                preferences.edit().putLong("dialog_join_requested_time_" + dialogId, System.currentTimeMillis()).commit();
+                JoinGroupAlert.showBulletin(getContext(), ProfileActivity.this, ChatObject.isChannel(currentChat) && !currentChat.megagroup);
+                updateRowsIds();
+                if (listAdapter != null) {
+                    listAdapter.notifyDataSetChanged();
+                }
+                if (lastFragment instanceof ChatActivity) {
+                    ((ChatActivity) lastFragment).showBottomOverlayProgress(false, true);
+                }
+                return false;
+            }
+            return true;
+        });
+        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.closeSearchByActiveAction);
+    }
+
+    private void messageAction() {
+        // Открытие чата с пользователем
+        if (userId != 0) {
+            Bundle args = new Bundle();
+            args.putLong("user_id", userId);
+            presentFragment(new ChatActivity(args));
+        }
+        // Для групп - открытие существующего чата
+        else if (chatId != 0) {
+            Bundle args = new Bundle();
+            args.putLong("chat_id", chatId);
+            presentFragment(new ChatActivity(args));
+        }
+    }
+
+    private void muteAction() {
+        final long did;
+        if (dialogId != 0) {
+            did = dialogId;
+        } else if (userId != 0) {
+            did = userId;
+        } else {
+            did = -chatId;
+        }
+        boolean muted = getMessagesController().isDialogMuted(did, topicId);
+        getNotificationsController().muteDialog(did, topicId, !muted);
+        if (ProfileActivity.this.fragmentView != null) {
+            BulletinFactory.createMuteBulletin(ProfileActivity.this, !muted, null).show();
+        }
+        updateExceptions();
+        if (notificationsRow >= 0 && listAdapter != null) {
+            listAdapter.notifyItemChanged(notificationsRow);
+        }
+    }
+
+    private void callAction() {
+        if (userId != 0) {
+            TLRPC.User user = getMessagesController().getUser(userId);
+            if (user != null) {
+                VoIPHelper.startCall(user, false, userInfo != null && userInfo.video_calls_available,
+                        getParentActivity(), userInfo, getAccountInstance());
+            }
+        }
+    }
+
+    private void videoAction() {
+        if (userId != 0) {
+            TLRPC.User user = getMessagesController().getUser(userId);
+            if (user != null) {
+                VoIPHelper.startCall(user, true, userInfo != null && userInfo.video_calls_available,
+                        getParentActivity(), userInfo, getAccountInstance());
+            }
+        }
+    }
+
+    private void giftAction() {
+        if (userInfo != null && UserObject.areGiftsDisabled(userInfo)) {
+            BaseFragment lastFragment = LaunchActivity.getSafeLastFragment();
+            if (lastFragment != null) {
+                BulletinFactory.of(lastFragment).createSimpleBulletin(R.raw.error, AndroidUtilities.replaceTags(LocaleController.formatString(R.string.UserDisallowedGifts, DialogObject.getShortName(getDialogId())))).show();
+            }
+            return;
+        }
+        if (currentChat != null) {
+            MessagesController.getGlobalMainSettings().edit().putInt("channelgifthint", 3).apply();
+        }
+        showDialog(new GiftSheet(getContext(), currentAccount, getDialogId(), null, null));
+    }
+
+    private void shareAction() {
+        try {
+            String text = null;
+            if (userId != 0) {
+                TLRPC.User user = getMessagesController().getUser(userId);
+                if (user == null) return;
+
+                if (botInfo != null && userInfo != null && !TextUtils.isEmpty(userInfo.about)) {
+                    text = String.format("%s https://" + getMessagesController().linkPrefix + "/%s",
+                            userInfo.about, UserObject.getPublicUsername(user));
+                } else {
+                    text = String.format("https://" + getMessagesController().linkPrefix + "/%s",
+                            UserObject.getPublicUsername(user));
+                }
+            } else if (chatId != 0) {
+                TLRPC.Chat chat = getMessagesController().getChat(chatId);
+                if (chat == null) return;
+
+                if (chatInfo != null && !TextUtils.isEmpty(chatInfo.about)) {
+                    text = String.format("%s\nhttps://" + getMessagesController().linkPrefix + "/%s",
+                            chatInfo.about, ChatObject.getPublicUsername(chat));
+                } else {
+                    text = String.format("https://" + getMessagesController().linkPrefix + "/%s",
+                            ChatObject.getPublicUsername(chat));
+                }
+            }
+
+            if (TextUtils.isEmpty(text)) return;
+
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.setType("text/plain");
+            intent.putExtra(Intent.EXTRA_TEXT, text);
+            startActivityForResult(Intent.createChooser(intent, LocaleController.getString(R.string.BotShare)), 500);
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+    }
+
+    private void stopAction() {
+        // Для ботов - остановка/перезапуск
+        if (isBot && userId != 0) {
+            TLRPC.User user = getMessagesController().getUser(userId);
+            if (user == null) return;
+
+            if (!userBlocked) {
+                AlertsCreator.createClearOrDeleteDialogAlert(this, false, currentChat, user,
+                        currentEncryptedChat != null, true, true, (param) -> {
+                            if (getParentLayout() != null) {
+                                List<BaseFragment> fragmentStack = getParentLayout().getFragmentStack();
+                                BaseFragment prevFragment = fragmentStack.size() < 2 ? null : fragmentStack.get(fragmentStack.size() - 2);
+                                if (prevFragment instanceof ChatActivity) {
+                                    getParentLayout().removeFragmentFromStack(fragmentStack.size() - 2);
+                                }
+                            }
+                            finishFragment();
+                            getNotificationCenter().postNotificationName(NotificationCenter.needDeleteDialog, dialogId, user, currentChat, param);
+                        }, getResourceProvider());
+            } else {
+                getMessagesController().unblockPeer(userId, () ->
+                        getSendMessagesHelper().sendMessage(SendMessagesHelper.SendMessageParams.of(
+                                "/start", userId, null, null, null, false, null, null, null, true, 0, null, false)));
+                finishFragment();
+            }
+        }
+    }
+
+    private void voiceChatAction() {
+        if (chatId != 0) {
+            TLRPC.Chat chat = getMessagesController().getChat(chatId);
+            if (chat == null) return;
+
+            ChatObject.Call call = getMessagesController().getGroupCall(chatId, false);
+            if (call == null) {
+                VoIPHelper.showGroupCallAlert(this, chat, null, false, getAccountInstance());
+            } else {
+                VoIPHelper.startCall(chat, null, null, false, getParentActivity(), this, getAccountInstance());
+            }
+        }
+    }
+
+    private void leaveAction() {
+        leaveChatPressed();
+    }
+
+    private void reportAction() {
+        ReportBottomSheet.openChat(this, getDialogId());
+    }
+
+    private void storyAction() {
+        if (chatId != 0) {
+            Bundle args = new Bundle();
+            args.putInt("type", MediaActivity.TYPE_ARCHIVED_CHANNEL_STORIES);
+            args.putLong("dialog_id", -chatId);
+            MediaActivity fragment = new MediaActivity(args, null);
+            fragment.setChatInfo(chatInfo);
+            presentFragment(fragment);
+        }
+    }
+
+    private void discussAction() {
+        openDiscussion();
+    }
+
+    private List<ButtonData> createButtonList() {
+        List<ButtonData> buttons = new ArrayList<>();
+
+        for (ButtonType type : ButtonType.values()) {
+            if (shouldShowButton(type)) {
+                buttons.add(new ButtonData(
+                        type,
+                        getDrawableResource(type),
+                        getButtonText(type),
+                        getClickListener(type)
+                ));
+            }
+        }
+
+        return buttons;
+    }
+
+    // Добавлены ресурсы для новых кнопок
+    private int getDrawableResource(ButtonType type) {
+        switch (type) {
+            case VOICE_CHAT: return R.drawable.live_stream;
+            case STORY: return R.drawable.story;
+            case JOIN: return R.drawable.join;
+            case MESSAGE: return R.drawable.message;
+            case MUTE: return R.drawable.mute;
+            case CALL: return R.drawable.call;
+            case VIDEO: return R.drawable.video;
+            case GIFT: return R.drawable.gift;
+            case SHARE: return R.drawable.share;
+            case STOP: return R.drawable.block;
+            case LEAVE: return R.drawable.leave;
+            case REPORT: return R.drawable.report;
+            case DISCUSS: return R.drawable.message;
+            default: return 0;
+        }
+    }
+
+    // Добавлены тексты для новых кнопок
+    private String getButtonText(ButtonType type) {
+        switch (type) {
+            case VOICE_CHAT: return "Voice Chat";
+            case STORY: return "Stories";
+            case JOIN: return "Join";
+            case MESSAGE: return "Message";
+            case MUTE: return "Mute";
+            case CALL: return "Call";
+            case VIDEO: return "Video";
+            case GIFT: return "Gift";
+            case SHARE: return "Share";
+            case STOP: return "Stop";
+            case LEAVE: return "Leave";
+            case REPORT: return "Report";
+            case DISCUSS: return "Discuss";
+            default: return "";
+        }
+    }
+
+    // Добавлены обработчики для новых кнопок
+    private View.OnClickListener getClickListener(ButtonType type) {
+        switch (type) {
+            case VOICE_CHAT: return v -> voiceChatAction();
+            case STORY: return v -> storyAction();
+            case JOIN: return v -> joinAction();
+            case MESSAGE: return v -> messageAction();
+            case MUTE: return v -> muteAction();
+            case CALL: return v -> callAction();
+            case VIDEO: return v -> videoAction();
+            case GIFT: return v -> giftAction();
+            case SHARE: return v -> shareAction();
+            case STOP: return v -> stopAction();
+            case LEAVE: return v -> leaveAction();
+            case REPORT: return v -> reportAction();
+            case DISCUSS: return v -> discussAction();
+            default: return v -> {};
+        }
     }
 
     private void updateBottomButtonY() {
