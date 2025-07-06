@@ -5,11 +5,12 @@ import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.util.TypedValue;
 import android.view.Gravity;
-import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import org.telegramIunzhakov.ui.ActionBar.Theme;
 
 public class ProfileButton extends FrameLayout {
     public ProfileButton(Context context, ButtonData data) {
@@ -18,11 +19,12 @@ public class ProfileButton extends FrameLayout {
     }
 
     private void init(Context context, ButtonData data) {
-        // Настройка фона с закруглёнными углами
+
         GradientDrawable background = new GradientDrawable();
         background.setShape(GradientDrawable.RECTANGLE);
         background.setCornerRadius(dpToPx(context, 8));
-        background.setColor(Color.WHITE); // Цвет фона
+        background.setColor(Theme.getColor(Theme.key_profile_buttons));
+        background.setAlpha(100);
         setBackground(background);
 
         // Внутренний вертикальный контейнер
@@ -43,31 +45,28 @@ public class ProfileButton extends FrameLayout {
         icon.setImageResource(data.getImageResId());
         icon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
         LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(
-                dpToPx(context, 48), // Размер иконки
+                dpToPx(context, 48),
                 dpToPx(context, 48)
         );
-        iconParams.gravity = Gravity.CENTER;
+        iconParams.gravity = Gravity.TOP;
         innerLayout.addView(icon, iconParams);
 
         // Текст
         TextView textView = new TextView(context);
         textView.setText(data.getText());
-        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-        textView.setGravity(Gravity.CENTER);
-        textView.setTextColor(Color.BLACK); // Цвет текста
+        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        textView.setGravity(Gravity.BOTTOM);
+        textView.setTextColor(Color.WHITE);
         LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
                 LayoutParams.WRAP_CONTENT,
                 LayoutParams.WRAP_CONTENT
         );
-        textParams.topMargin = dpToPx(context, 4); // Отступ от иконки
+        textParams.topMargin = dpToPx(context, 2);
         textParams.gravity = Gravity.CENTER;
         innerLayout.addView(textView, textParams);
-
-        // Обработчик клика
         setOnClickListener(data.getClickListener());
 
-        // Отступы внутри кнопки
-        int padding = dpToPx(context, 16);
+        int padding = dpToPx(context, 4);
         setPadding(padding, padding, padding, padding);
     }
 

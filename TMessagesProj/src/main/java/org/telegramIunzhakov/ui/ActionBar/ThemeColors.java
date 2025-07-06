@@ -809,6 +809,7 @@ public class ThemeColors {
         defaultColors[key_iv_navigationBackground] = 0xfff0f0f0;
 
         defaultColors[key_reactionStarSelector] = 0x40F0AB1F;
+        defaultColors[key_profile_buttons] = 0xff000000;
 
         return defaultColors;
     }

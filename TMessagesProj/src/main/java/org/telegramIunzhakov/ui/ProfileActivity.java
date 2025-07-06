@@ -5374,7 +5374,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
         }
 
-        FrameLayout buttonsContainer = new FrameLayout(context);
+        buttonsContainer = new FrameLayout(context);
         frameLayout.addView(buttonsContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP, 16, 0, 16, 0));
         List<ButtonData> allButtons = createButtonList();
         setupButtonsContainer(buttonsContainer, allButtons);
@@ -5571,7 +5571,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         horizontalLayout.setWeightSum(buttonsToShow.size());
         buttonsContainer.addView(horizontalLayout);
 
-        int margin = dp(8);
+        int margin = dp(4);
         LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
                 0,
                 FrameLayout.LayoutParams.MATCH_PARENT,
@@ -5587,7 +5587,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     }
 
     private boolean shouldShowButton(ButtonType buttonType) {
-        Context context = getContext();
         if (actionBar == null || otherItem == null) {
             return false;
         }
@@ -5612,7 +5611,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 case MESSAGE:
                     return !UserObject.isUserSelf(user);
                 case MUTE:
-                    return true;
+                    return !UserObject.isUserSelf(user);
                 case CALL:
                     return userInfo != null && userInfo.phone_calls_available;
                 case VIDEO:
