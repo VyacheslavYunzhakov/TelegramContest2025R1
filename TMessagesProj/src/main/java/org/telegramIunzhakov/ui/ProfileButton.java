@@ -1,5 +1,6 @@
 package org.telegramIunzhakov.ui;
 
+
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
@@ -8,8 +9,8 @@ import android.view.Gravity;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
+import org.telegramIunzhakov.ui.ActionBar.SimpleTextView;
 import org.telegramIunzhakov.ui.ActionBar.Theme;
 
 public class ProfileButton extends FrameLayout {
@@ -23,8 +24,8 @@ public class ProfileButton extends FrameLayout {
         GradientDrawable background = new GradientDrawable();
         background.setShape(GradientDrawable.RECTANGLE);
         background.setCornerRadius(dpToPx(context, 8));
-        background.setColor(Theme.getColor(Theme.key_profile_buttons));
-        background.setAlpha(100);
+        background.setColor(Theme.isCurrentThemeDark() || Theme.isCurrentThemeNight() ? 0xff597590 : 0xff0E477F);
+        background.setAlpha(64);
         setBackground(background);
 
         // Внутренний вертикальный контейнер
@@ -32,7 +33,6 @@ public class ProfileButton extends FrameLayout {
         innerLayout.setOrientation(LinearLayout.VERTICAL);
         innerLayout.setGravity(Gravity.CENTER);
 
-        // Параметры для размещения внутри FrameLayout
         LayoutParams innerParams = new LayoutParams(
                 LayoutParams.WRAP_CONTENT,
                 LayoutParams.WRAP_CONTENT,
@@ -40,7 +40,6 @@ public class ProfileButton extends FrameLayout {
         );
         addView(innerLayout, innerParams);
 
-        // Иконка
         ImageView icon = new ImageView(context);
         icon.setImageResource(data.getImageResId());
         icon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
@@ -48,14 +47,13 @@ public class ProfileButton extends FrameLayout {
                 dpToPx(context, 48),
                 dpToPx(context, 48)
         );
-        iconParams.gravity = Gravity.TOP;
+        iconParams.gravity = Gravity.TOP|Gravity.CENTER_HORIZONTAL;
         innerLayout.addView(icon, iconParams);
 
-        // Текст
-        TextView textView = new TextView(context);
+        SimpleTextView textView = new SimpleTextView(context);
         textView.setText(data.getText());
-        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        textView.setGravity(Gravity.BOTTOM);
+        textView.setTextSize(12);
+        textView.setGravity(Gravity.BOTTOM|Gravity.CENTER_HORIZONTAL);
         textView.setTextColor(Color.WHITE);
         LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
                 LayoutParams.WRAP_CONTENT,
