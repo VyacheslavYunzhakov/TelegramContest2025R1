@@ -327,6 +327,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private final static float END_AVATAR_SIZE = 98f;
     private final static float AVATAR_LEFT_MARGIN = 64f;
     private final static float TEXTS_LEFT_MARGIN= 118f;
+    private final static float BUTTONS_CONTAINER_SIZE = 88;
     private final Paint mainPaint =          new Paint(Paint.ANTI_ALIAS_FLAG);
     private final static int WHITE = 0xFFFFFFFF;
     private final static int BLACK = 0x00000000;
@@ -5363,6 +5364,17 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
             onWriteButtonClick();
         });
+
+        buttonsContainer = new FrameLayout(context);
+        frameLayout.addView(buttonsContainer, LayoutHelper.createFrame(
+                LayoutHelper.MATCH_PARENT,
+                0,
+                Gravity.TOP,
+                0, 0, 0, 0
+        ));
+        List<ButtonData> allButtons = createButtonList();
+        setupButtonsContainer(allButtons);
+
         needLayout(false);
 
         if (scrollTo != -1) {
@@ -5373,11 +5385,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 writeButton.setAlpha(0.0f);
             }
         }
-
-        buttonsContainer = new FrameLayout(context);
-        frameLayout.addView(buttonsContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP, 16, 0, 16, 0));
-        List<ButtonData> allButtons = createButtonList();
-        setupButtonsContainer(buttonsContainer, allButtons);
 
         listView.setOnScrollListener(new RecyclerView.OnScrollListener() {
 
@@ -5554,7 +5561,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         return fragmentView;
     }
 
-    public void setupButtonsContainer(FrameLayout buttonsContainer, List<ButtonData> allButtons) {
+    public void setupButtonsContainer(List<ButtonData> allButtons) {
         buttonsContainer.removeAllViews();
 
         List<ButtonData> visibleButtons = new ArrayList<>(allButtons);
@@ -5562,25 +5569,28 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
         List<ButtonData> buttonsToShow = visibleButtons.subList(0, Math.min(visibleButtons.size(), 4));
 
+        int margin = dp(14);
+        int buttonMargin = dp(4);
         LinearLayout horizontalLayout = new LinearLayout(buttonsContainer.getContext());
-        horizontalLayout.setLayoutParams(new FrameLayout.LayoutParams(
+        LinearLayout.LayoutParams horizontalLayoutParams = new LinearLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
-        ));
+        );
+        horizontalLayoutParams.setMargins(margin - buttonMargin, margin, margin - buttonMargin, margin);
+        horizontalLayout.setLayoutParams(horizontalLayoutParams);
         horizontalLayout.setOrientation(LinearLayout.HORIZONTAL);
         horizontalLayout.setWeightSum(buttonsToShow.size());
         buttonsContainer.addView(horizontalLayout);
 
-        int margin = dp(4);
         LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
                 0,
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 1.0f
         );
-        buttonParams.setMargins(margin, margin, margin, margin);
+        buttonParams.setMargins(buttonMargin, 0, buttonMargin, 0);
 
         for (ButtonData buttonData : buttonsToShow) {
-            ProfileButton button = new ProfileButton(buttonsContainer.getContext(), buttonData);
+            ProfileButton button = new ProfileButton(buttonsContainer.getContext(), buttonData, BUTTONS_CONTAINER_SIZE - 14*2);
             button.setLayoutParams(buttonParams);
             horizontalLayout.addView(button);
         }
@@ -7732,6 +7742,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             viewTop = ActionBar.getCurrentActionBarHeight() - dp(42) + (Build.VERSION.SDK_INT >= 21 && actionBar.getOccupyStatusBar()  ? AndroidUtilities.statusBarHeight : 0);
         }
         avatarContainer2.invalidate();;
+        adjustButtonContainer();
         float yAdjustmentFixated = AndroidUtilities.dp(7.5f)*(1-diff);
         avatarY = viewTop * diff - (START_AVATAR_SIZE + 2) * (1-diff) * density;
         avatarScale = (START_AVATAR_SIZE + (END_AVATAR_SIZE-START_AVATAR_SIZE) * diff) / START_AVATAR_SIZE;
@@ -7804,6 +7815,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         avatarScale = AndroidUtilities.lerp((END_AVATAR_SIZE) / START_AVATAR_SIZE, (END_AVATAR_SIZE + AVATAR_ENLARGE_SIZE) / START_AVATAR_SIZE, Math.min(1f, expandProgress * 5f));
 
         final float durationFactor = Math.min(AndroidUtilities.dpf2(2000f), Math.max(AndroidUtilities.dpf2(1100f), Math.abs(listViewVelocityY))) / AndroidUtilities.dpf2(1100f);
+        adjustButtonContainer();
         if (allowPullingDown && (openingAvatar || expandProgress >= 0.20f)) {
             if (!isPulledDown) {
                 if (otherItem != null) {
@@ -8043,8 +8055,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private void needLayout(boolean animated) {
         float diff = Math.min(1f, extraHeight / AndroidUtilities.dp(EXTRA_HEIGHT));
         final int newTop = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight();
+
         if (viewTop == 0) {
-            viewTop = ActionBar.getCurrentActionBarHeight() - dp(42) + (Build.VERSION.SDK_INT >= 21 && actionBar.getOccupyStatusBar()  ? AndroidUtilities.statusBarHeight : 0);
+            viewTop = ActionBar.getCurrentActionBarHeight() - dp(START_AVATAR_SIZE) + (Build.VERSION.SDK_INT >= 21 && actionBar.getOccupyStatusBar()  ? AndroidUtilities.statusBarHeight : 0);
         }
 
         FrameLayout.LayoutParams layoutParams;
@@ -8056,6 +8069,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
         }
 
+        adjustButtonContainer();
         if (avatarContainer != null) {
 
             listView.setTopGlowOffset((int) extraHeight);
@@ -8135,9 +8149,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     giftsView.setExpandCoords(avatarContainer2.getMeasuredWidth() - AndroidUtilities.dp(40), writeButtonVisible, (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight() + extraHeight + searchTransitionOffset);
                 }
             }
-            float yAdjustmentFixated = AndroidUtilities.dp(7.5f)*(1-diff);
+            float yAdjustmentFixated = AndroidUtilities.dp(7.5f) * (1 - diff);
 
-            float screenCenterX = AndroidUtilities.isTablet() ? AndroidUtilities.dp(490/2f) : displayMetrics.widthPixels / 2f;
+            float screenCenterX = AndroidUtilities.isTablet() ? AndroidUtilities.dp(490 / 2f) : displayMetrics.widthPixels / 2f;
 
             float avatarHalf = START_AVATAR_SIZE * density * avatarScale / 2f;
 
@@ -8244,8 +8258,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     starFgItem.setTranslationY(avatarContainer.getY() + AndroidUtilities.dp(24) + extra);
                 }
 
-                nameY =  viewTop + ((END_AVATAR_SIZE + 7f) * AndroidUtilities.density) * diff - yAdjustmentFixated;
-                onlineY = nameY + AndroidUtilities.dp(24)*nameScale;
+                nameY = viewTop + ((END_AVATAR_SIZE + 7f) * AndroidUtilities.density) * diff - yAdjustmentFixated;
+                onlineY = nameY + AndroidUtilities.dp(24) * nameScale;
                 if (showStatusButton != null) {
                     showStatusButton.setAlpha((int) (0xFF * diff));
                 }
@@ -8297,6 +8311,21 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
         }
         updateEmojiStatusEffectPosition();
+    }
+
+    private void adjustButtonContainer() {
+        final int newTop = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight();
+        if (buttonsContainer!= null) {
+            FrameLayout.LayoutParams layoutParams1 = (FrameLayout.LayoutParams) buttonsContainer.getLayoutParams();
+            if (extraHeight <= dp(BUTTONS_CONTAINER_SIZE)) {
+                layoutParams1.height = (int) extraHeight;
+            } else {
+                layoutParams1.height = dp(BUTTONS_CONTAINER_SIZE);
+            }
+            buttonsContainer.setLayoutParams(layoutParams1);
+            buttonsContainer.setTranslationY(newTop + extraHeight - layoutParams1.height);
+            buttonsContainer.setAlpha((float) layoutParams1.height /dp(BUTTONS_CONTAINER_SIZE));
+        }
     }
 
     public void updateQrItemVisibility(boolean animated) {
