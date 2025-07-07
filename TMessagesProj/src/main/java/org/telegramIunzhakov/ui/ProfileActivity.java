@@ -7803,7 +7803,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         adjustWriteButton(false);
     }
 
-    float startX = 0f;
     float centerAvatarY = 0f;
     float centerOnlineY = 0f;
     float centerNameY = 0f;
@@ -11689,6 +11688,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
             searchItem.setAlpha(progressHalf);
             topView.invalidate();
+            buttonsContainer.invalidate();
             fragmentView.invalidate();
         });
 
