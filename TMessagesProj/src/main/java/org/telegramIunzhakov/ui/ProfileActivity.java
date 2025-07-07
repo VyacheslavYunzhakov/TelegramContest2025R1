@@ -1217,7 +1217,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         private final GradientDrawable bottomOverlayGradient;
         private final ValueAnimator animator;
         private final float[] animatorValues = new float[]{0f, 1f};
-        private final Paint backgroundPaint;
+        private final Paint topBackgroundPaint;
+        private final Paint bottomBackgroundPaint;
         private final Paint barPaint;
         private final Paint selectedBarPaint;
 
@@ -1250,7 +1251,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             topOverlayGradient = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{0x42000000, 0});
             topOverlayGradient.setShape(GradientDrawable.RECTANGLE);
 
-            bottomOverlayGradient = new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, new int[]{0x42000000, 0});
+            bottomOverlayGradient = new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, new int[]{0xCCFFFFFF, 0});
             bottomOverlayGradient.setShape(GradientDrawable.RECTANGLE);
 
             for (int i = 0; i < 2; i++) {
@@ -1259,9 +1260,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 pressedOverlayGradient[i].setShape(GradientDrawable.RECTANGLE);
             }
 
-            backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            backgroundPaint.setColor(Color.BLACK);
-            backgroundPaint.setAlpha(66);
+            bottomBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            topBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            topBackgroundPaint.setAlpha(66);
+            topBackgroundPaint.setColor(Color.BLACK);
+            bottomBackgroundPaint.setColor(Color.WHITE);
+            bottomBackgroundPaint.setAlpha(204);
             animator = ValueAnimator.ofFloat(0f, 1f);
             animator.setDuration(250);
             animator.setInterpolator(CubicBezierInterpolator.EASE_BOTH);
@@ -1296,7 +1300,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 int alpha = (int) (255 * value);
                 topOverlayGradient.setAlpha(alpha);
                 bottomOverlayGradient.setAlpha(alpha);
-                backgroundPaint.setAlpha((int) (66 * value));
+                topBackgroundPaint.setAlpha((int) (66 * value));
+                bottomBackgroundPaint.setAlpha((int) (204 * value));
                 barPaint.setAlpha((int) (0x55 * value));
                 selectedBarPaint.setAlpha(alpha);
                 this.alpha = value;
@@ -1339,9 +1344,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             final int actionBarHeight = statusBarHeight + ActionBar.getCurrentActionBarHeight();
             final float k = 0.5f;
             topOverlayRect.set(0, 0, w, (int) (actionBarHeight * k));
-            bottomOverlayRect.set(0, (int) (h - AndroidUtilities.dp(72f) * k), w, h);
+            bottomOverlayRect.set(0, (int) (h - AndroidUtilities.dp(BUTTONS_CONTAINER_SIZE)), w, h);
             topOverlayGradient.setBounds(0, topOverlayRect.bottom, w, actionBarHeight + AndroidUtilities.dp(16f));
-            bottomOverlayGradient.setBounds(0, h - AndroidUtilities.dp(72f) - AndroidUtilities.dp(24f), w, bottomOverlayRect.top);
+            bottomOverlayGradient.setBounds(0, h - AndroidUtilities.dp(BUTTONS_CONTAINER_SIZE) - AndroidUtilities.dp(24f), w, bottomOverlayRect.top);
             pressedOverlayGradient[0].setBounds(0, 0, w / 5, h);
             pressedOverlayGradient[1].setBounds(w - (w / 5), 0, w, h);
         }
@@ -1357,8 +1362,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
             topOverlayGradient.draw(canvas);
             bottomOverlayGradient.draw(canvas);
-            canvas.drawRect(topOverlayRect, backgroundPaint);
-            canvas.drawRect(bottomOverlayRect, backgroundPaint);
+            canvas.drawRect(topOverlayRect, topBackgroundPaint);
+            canvas.drawRect(bottomOverlayRect, bottomBackgroundPaint);
 
             int count = avatarsViewPager.getRealCount();
             selectedPosition = avatarsViewPager.getRealPosition();
