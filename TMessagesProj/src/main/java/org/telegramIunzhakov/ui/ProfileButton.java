@@ -23,6 +23,7 @@ public class ProfileButton extends FrameLayout {
     private float MAX_HEIGHT;
     private ImageView icon;
     private SimpleTextView textView;
+    private ButtonData data;
 
     public ProfileButton(Context context, ButtonData data, float maxHeight ) {
         super(context);
@@ -30,6 +31,7 @@ public class ProfileButton extends FrameLayout {
         baseIconSize = 26;
         baseTextSize = 13;
         basePadding = 8;
+        this.data = data;
         init(context, data);
     }
 
@@ -104,6 +106,33 @@ public class ProfileButton extends FrameLayout {
         innerLayout.addView(textView, textParams);
         setOnClickListener(data.getClickListener());
         this.textView = textView;
+    }
+
+    public void updateContent(ButtonData data) {
+            // Анимация изменения иконки
+            icon.animate()
+                    .alpha(0)
+                    .setDuration(100)
+                    .withEndAction(() -> {
+                        icon.setImageResource(data.getImageResId());
+                        icon.animate().alpha(1).setDuration(100).start();
+                    })
+                    .start();
+
+            // Анимация изменения текста
+            textView.animate()
+                    .alpha(0)
+                    .setDuration(100)
+                    .withEndAction(() -> {
+                        textView.setText(data.getText());
+                        textView.animate().alpha(1).setDuration(100).start();
+                    })
+                    .start();
+    }
+
+
+    public ButtonData getData() {
+        return data;
     }
 }
 

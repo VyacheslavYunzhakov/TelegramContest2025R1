@@ -5777,15 +5777,33 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void messageAction() {
-        if (userId != 0) {
+        if (playProfileAnimation != 0 && parentLayout != null && parentLayout.getFragmentStack() != null && parentLayout.getFragmentStack().size() >= 2 && parentLayout.getFragmentStack().get(parentLayout.getFragmentStack().size() - 2) instanceof ChatActivity) {
+            finishFragment();
+        } else {
+            TLRPC.User user = getMessagesController().getUser(userId);
+            if (user == null || user instanceof TLRPC.TL_userEmpty) {
+                return;
+            }
             Bundle args = new Bundle();
             args.putLong("user_id", userId);
-            presentFragment(new ChatActivity(args));
-        }
-        else if (chatId != 0) {
-            Bundle args = new Bundle();
-            args.putLong("chat_id", chatId);
-            presentFragment(new ChatActivity(args));
+            if (!getMessagesController().checkCanOpenChat(args, ProfileActivity.this)) {
+                return;
+            }
+            boolean removeFragment = arguments.getBoolean("removeFragmentOnChatOpen", true);
+            if (!AndroidUtilities.isTablet() && removeFragment) {
+                getNotificationCenter().removeObserver(ProfileActivity.this, NotificationCenter.closeChats);
+                getNotificationCenter().postNotificationName(NotificationCenter.closeChats);
+            }
+            int distance = getArguments().getInt("nearby_distance", -1);
+            if (distance >= 0) {
+                args.putInt("nearby_distance", distance);
+            }
+            ChatActivity chatActivity = new ChatActivity(args);
+            chatActivity.setPreloadedSticker(getMediaDataController().getGreetingsSticker(), false);
+            presentFragment(chatActivity, removeFragment);
+            if (AndroidUtilities.isTablet()) {
+                finishFragment();
+            }
         }
     }
 
@@ -5806,6 +5824,31 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         updateExceptions();
         if (notificationsRow >= 0 && listAdapter != null) {
             listAdapter.notifyItemChanged(notificationsRow);
+        }
+        if (buttonsContainer != null) {
+            for (int i = 0; i < buttonsContainer.getChildCount(); i++) {
+                View child = buttonsContainer.getChildAt(i);
+                if (child instanceof LinearLayout) {
+                    LinearLayout layout = (LinearLayout) child;
+                    for (int j = 0; j < layout.getChildCount(); j++) {
+                        View buttonView = layout.getChildAt(j);
+                        if (buttonView instanceof ProfileButton) {
+                            ProfileButton button = (ProfileButton) buttonView;
+                            if (button.getData().getButtonType() == ButtonType.MUTE) {
+                                ButtonData newData = new ButtonData(
+                                        ButtonType.MUTE,
+                                        getDrawableResource(ButtonType.MUTE),
+                                        getButtonText(ButtonType.MUTE),
+                                        v -> muteAction()
+                                );
+
+                                button.updateContent(newData);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -5968,7 +6011,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             case STORY: return R.drawable.story;
             case JOIN: return R.drawable.join;
             case MESSAGE: return R.drawable.message;
-            case MUTE: return R.drawable.mute;
+            case MUTE: return !checkMute() ? R.drawable.mute : R.drawable.unmute;
             case CALL: return R.drawable.call;
             case VIDEO: return R.drawable.video;
             case GIFT: return R.drawable.gift;
@@ -5987,7 +6030,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             case STORY: return "Stories";
             case JOIN: return "Join";
             case MESSAGE: return "Message";
-            case MUTE: return "Mute";
+            case MUTE: return !checkMute() ? "Mute" : "Unmute";
             case CALL: return "Call";
             case VIDEO: return "Video";
             case GIFT: return "Gift";
@@ -6017,6 +6060,18 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             case DISCUSS: return v -> discussAction();
             default: return v -> {};
         }
+    }
+
+    private Boolean checkMute() {
+        final long did;
+        if (dialogId != 0) {
+            did = dialogId;
+        } else if (userId != 0) {
+            did = userId;
+        } else {
+            did = -chatId;
+        }
+        return getMessagesController().isDialogMuted(did, topicId);
     }
 
     private void updateBottomButtonY() {
