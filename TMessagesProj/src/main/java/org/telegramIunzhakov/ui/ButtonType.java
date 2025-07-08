@@ -4,17 +4,17 @@ public enum ButtonType {
     JOIN(1),
     MESSAGE(2),
     DISCUSS(3),
-    MUTE(4),
-    CALL(5),
-    VIDEO(6),
-    VOICE_CHAT(7),
-    LIVE_STREAM(8),
+    VOICE_CHAT(4),
+    LIVE_STREAM(5),
+    MUTE(6),
+    CALL(7),
+    VIDEO(8),
     SHARE(9),
     LEAVE(10),
-    GIFT(11),
-    STOP(12),
-    REPORT(13),
-    STORY(14);
+    STOP(11),
+    REPORT(12),
+    STORY(13),
+    GIFT(14);
 
     private final int priority;
 
