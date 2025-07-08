@@ -8264,7 +8264,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         if (writeButton != null) {
             writeButton.setTranslationY((actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight() + extraHeight + searchTransitionOffset - AndroidUtilities.dp(29.5f));
 
-            boolean writeButtonVisible = diff > 0.2f && !searchMode && (imageUpdater == null || setAvatarRow == -1);
+            boolean writeButtonVisible = isSettings() && diff > 0.2f && !searchMode && (imageUpdater == null || setAvatarRow == -1);
             if (writeButtonVisible && chatId != 0) {
                 writeButtonVisible = ChatObject.isChannel(currentChat) && !currentChat.megagroup && chatInfo != null && chatInfo.linked_chat_id != 0 && infoHeaderRow != -1;
             }
