@@ -5516,12 +5516,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         return false;
                 }
             } else if (joined) {
-                boolean writeButtonVisible = (imageUpdater == null || setAvatarRow == -1) &&
-                        ChatObject.isChannel(chat) &&
+                boolean writeButtonVisible = ChatObject.isChannel(chat) &&
                         !chat.megagroup &&
                         chatInfo != null &&
-                        chatInfo.linked_chat_id != 0 &&
-                        infoHeaderRow != -1;
+                        chatInfo.linked_chat_id != 0;
 
                 boolean storiesVisible = chat.creator ||
                         (chat.admin_rights != null && chat.admin_rights.edit_stories);
