@@ -5886,12 +5886,27 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
     private void storyAction() {
         if (chatId != 0) {
-            Bundle args = new Bundle();
-            args.putInt("type", MediaActivity.TYPE_ARCHIVED_CHANNEL_STORIES);
-            args.putLong("dialog_id", -chatId);
-            MediaActivity fragment = new MediaActivity(args, null);
-            fragment.setChatInfo(chatInfo);
-            presentFragment(fragment);
+        StoryRecorder.getInstance(getParentActivity(), getCurrentAccount())
+                .closeToWhenSent(new StoryRecorder.ClosingViewProvider() {
+                    @Override
+                    public void preLayout(long dialogId, Runnable runnable) {
+                        avatarImage.setHasStories(needInsetForStories());
+                        if (dialogId == getDialogId()) {
+                            collapseAvatarInstant();
+                        }
+                        AndroidUtilities.runOnUIThread(runnable, 30);
+                    }
+
+                    @Override
+                    public StoryRecorder.SourceView getView(long dialogId) {
+                        if (dialogId != getDialogId()) {
+                            return null;
+                        }
+                        updateAvatarRoundRadius();
+                        return StoryRecorder.SourceView.fromAvatarImage(avatarImage, ChatObject.isForum(currentChat));
+                    }
+                })
+                .open(null);
         }
     }
 
