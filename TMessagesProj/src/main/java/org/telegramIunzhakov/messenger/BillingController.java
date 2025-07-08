@@ -1,7 +1,7 @@
 package org.telegramIunzhakov.messenger;
 
-import static org.telegram.messenger.MessagesController.findUpdates;
-import static org.telegram.messenger.MessagesController.findUpdatesAndRemove;
+import static org.telegramIunzhakov.messenger.MessagesController.findUpdates;
+import static org.telegramIunzhakov.messenger.MessagesController.findUpdatesAndRemove;
 
 import android.app.Activity;
 import android.content.ActivityNotFoundException;

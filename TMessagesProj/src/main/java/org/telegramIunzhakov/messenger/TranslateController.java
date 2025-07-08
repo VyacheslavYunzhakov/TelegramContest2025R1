@@ -1,6 +1,6 @@
 package org.telegramIunzhakov.messenger;
 
-import static org.telegram.ui.Components.TranslateAlert2.userAgents;
+import static org.telegramIunzhakov.ui.Components.TranslateAlert2.userAgents;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.res.Resources;

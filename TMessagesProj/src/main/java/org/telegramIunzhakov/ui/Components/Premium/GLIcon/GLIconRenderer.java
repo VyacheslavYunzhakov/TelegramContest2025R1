@@ -1,6 +1,6 @@
 package org.telegramIunzhakov.ui.Components.Premium.GLIcon;
 
-import static org.telegram.ui.Components.Premium.GLIcon.Icon3D.TYPE_DIAMOND;
+import static org.telegramIunzhakov.ui.Components.Premium.GLIcon.Icon3D.TYPE_DIAMOND;
 
 import android.content.Context;
 import android.graphics.Bitmap;
