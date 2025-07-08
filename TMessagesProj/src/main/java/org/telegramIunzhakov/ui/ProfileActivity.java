@@ -5411,8 +5411,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 case MESSAGE:
                 case MUTE:
                 case SHARE:
-                case STOP:
                     return true;
+                case STOP:
+                    return !userBlocked;
                 default:
                     return false;
             }
