@@ -63,8 +63,8 @@ public class ProfileButton extends FrameLayout {
         GradientDrawable background = new GradientDrawable();
         background.setShape(GradientDrawable.RECTANGLE);
         background.setCornerRadius(dp(10));
-        background.setColor(Theme.isCurrentThemeDark() || Theme.isCurrentThemeNight() ? 0xff597590 : 0xff0E477F);
-        background.setAlpha(64);
+        background.setColor(Theme.isCurrentThemeDark() || Theme.isCurrentThemeNight() ? 0xff465C72 : 0xff2B6296);
+        background.setAlpha(102);
         setBackground(background);
 
         // Внутренний вертикальный контейнер
