@@ -1,5 +1,8 @@
 package org.telegramIunzhakov.messenger;
 
+import static org.telegram.messenger.MessagesController.findUpdates;
+import static org.telegram.messenger.MessagesController.findUpdatesAndRemove;
+
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -24,11 +27,16 @@ import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.QueryProductDetailsParams;
 import com.android.billingclient.api.QueryPurchasesParams;
 
+import org.checkerframework.checker.units.qual.A;
 import org.telegramIunzhakov.messenger.utils.BillingUtilities;
 import org.telegramIunzhakov.tgnet.ConnectionsManager;
 import org.telegramIunzhakov.tgnet.TLRPC;
 import org.telegramIunzhakov.ui.ActionBar.AlertDialog;
+import org.telegramIunzhakov.ui.ActionBar.BaseFragment;
+import org.telegramIunzhakov.ui.LaunchActivity;
+import org.telegramIunzhakov.ui.LoginActivity;
 import org.telegramIunzhakov.ui.PremiumPreviewFragment;
+import org.telegramIunzhakov.ui.Stars.StarsController;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -42,7 +50,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class BillingController implements PurchasesUpdatedListener, BillingClientStateListener {
-    public final static String PREMIUM_PRODUCT_ID = "telegramIunzhakov_premium";
+    public final static String PREMIUM_PRODUCT_ID = "telegram_premium";
     public final static QueryProductDetailsParams.Product PREMIUM_PRODUCT = QueryProductDetailsParams.Product.newBuilder()
             .setProductType(BillingClient.ProductType.SUBS)
             .setProductId(PREMIUM_PRODUCT_ID)
@@ -355,6 +363,22 @@ public class BillingController implements PurchasesUpdatedListener, BillingClien
 
                             if (response instanceof TLRPC.Updates) {
                                 FileLog.d("BillingController.onPurchasesUpdatedInternal: " + purchase.getOrderId() + " purchase is purchased and now assigned");
+
+                                if (req.purpose instanceof TLRPC.TL_inputStorePaymentAuthCode) {
+                                    for (TLRPC.TL_updateSentPhoneCode u : findUpdatesAndRemove((TLRPC.Updates) response, TLRPC.TL_updateSentPhoneCode.class)) {
+                                        AndroidUtilities.runOnUIThread(() -> {
+                                            LoginActivity fragment = LaunchActivity.findFragment(LoginActivity.class);
+                                            if (fragment == null) {
+                                                fragment = new LoginActivity(acc.getCurrentAccount());
+                                                BaseFragment lastFragment = LaunchActivity.getSafeLastFragment();
+                                                if (lastFragment != null) {
+                                                    lastFragment.presentFragment(fragment);
+                                                }
+                                            }
+                                            fragment.open(((TLRPC.TL_inputStorePaymentAuthCode) req.purpose).phone_number, u.sent_code);
+                                        });
+                                    }
+                                }
 
                                 acc.getMessagesController().processUpdates((TLRPC.Updates) response, false);
 

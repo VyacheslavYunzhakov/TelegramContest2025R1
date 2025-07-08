@@ -79,8 +79,8 @@ import org.telegramIunzhakov.ui.Components.RadialProgressView;
 import org.telegramIunzhakov.ui.Components.ScaleStateListAnimator;
 import org.telegramIunzhakov.ui.Components.spoilers.SpoilersTextView;
 import org.telegramIunzhakov.ui.LaunchActivity;
+import org.telegramIunzhakov.ui.Stars.BalanceCloud;
 import org.telegramIunzhakov.ui.Stars.StarsIntroActivity;
-import org.telegramIunzhakov.ui.Stars.StarsReactionsSheet;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -610,7 +610,7 @@ public class AlertDialog extends Dialog implements Drawable.Callback, Notificati
     }
 
     private FrameLayout fullscreenContainerView;
-    private StarsReactionsSheet.BalanceCloud starsBalanceCloud;
+    private BalanceCloud starsBalanceCloud;
 
     private AlertDialogView containerView;
     public AlertDialogView getContainerView() {
@@ -651,7 +651,7 @@ public class AlertDialog extends Dialog implements Drawable.Callback, Notificati
 //                fullscreenContainerView.setFitsSystemWindows(Build.VERSION.SDK_INT >= 21);
             }
             if (starsBalanceCloud == null) {
-                starsBalanceCloud = new StarsReactionsSheet.BalanceCloud(getContext(), UserConfig.selectedAccount, resourcesProvider);
+                starsBalanceCloud = new BalanceCloud(getContext(), UserConfig.selectedAccount, resourcesProvider);
                 ScaleStateListAnimator.apply(starsBalanceCloud);
                 starsBalanceCloud.setOnClickListener(v -> {
                     new StarsIntroActivity.StarsOptionsSheet(getContext(), resourcesProvider).show();

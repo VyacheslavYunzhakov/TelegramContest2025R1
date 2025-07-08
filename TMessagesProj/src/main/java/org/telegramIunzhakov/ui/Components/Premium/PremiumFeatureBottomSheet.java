@@ -45,8 +45,10 @@ import org.telegramIunzhakov.ui.ChatActivity;
 import org.telegramIunzhakov.ui.Components.BottomPagesView;
 import org.telegramIunzhakov.ui.Components.CubicBezierInterpolator;
 import org.telegramIunzhakov.ui.Components.LayoutHelper;
+import org.telegramIunzhakov.ui.Components.LinkSpanDrawable;
 import org.telegramIunzhakov.ui.LaunchActivity;
 import org.telegramIunzhakov.ui.PremiumPreviewFragment;
+import org.telegramIunzhakov.ui.Stories.recorder.HintView2;
 import org.telegramIunzhakov.ui.ThemePreviewActivity;
 
 import java.lang.reflect.Field;
@@ -645,7 +647,7 @@ public class PremiumFeatureBottomSheet extends BottomSheet implements Notificati
 
         public int position;
         TextView title;
-        TextView description;
+        LinkSpanDrawable.LinksTextView description;
         PagerHeaderView topHeader;
         View topView;
         boolean topViewOnFullHeight;
@@ -665,7 +667,7 @@ public class PremiumFeatureBottomSheet extends BottomSheet implements Notificati
 
             addView(title, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 21, 20, 21, 0));
 
-            description = new TextView(context);
+            description = new LinkSpanDrawable.LinksTextView(context);
             description.setGravity(Gravity.CENTER_HORIZONTAL);
             description.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
             description.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
@@ -773,8 +775,8 @@ public class PremiumFeatureBottomSheet extends BottomSheet implements Notificati
                 description.setText(AndroidUtilities.replaceTags(featureData.description));
                 topViewOnFullHeight = false;
             }
+//            description.setMaxWidth(HintView2.cutInFancyHalf(description.getText(), description.getPaint()));
             requestLayout();
-
         }
     }
 

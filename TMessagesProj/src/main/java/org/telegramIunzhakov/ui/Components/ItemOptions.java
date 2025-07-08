@@ -15,6 +15,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PorterDuff;
 import android.graphics.RectF;
+import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
@@ -59,13 +60,16 @@ import org.telegramIunzhakov.ui.Stories.recorder.HintView2;
 public class ItemOptions {
 
     public static ItemOptions makeOptions(@NonNull BaseFragment fragment, @NonNull View scrimView) {
-        return new ItemOptions(fragment, scrimView, false, true);
+        return new ItemOptions(fragment, scrimView, false, true, false);
     }
     public static ItemOptions makeOptions(@NonNull BaseFragment fragment, @NonNull View scrimView, boolean swipeback) {
-        return new ItemOptions(fragment, scrimView, swipeback, true);
+        return new ItemOptions(fragment, scrimView, swipeback, true, false);
     }
     public static ItemOptions makeOptions(@NonNull BaseFragment fragment, @NonNull View scrimView, boolean swipeback, boolean withoutScrollView) {
-        return new ItemOptions(fragment, scrimView, swipeback, !withoutScrollView);
+        return new ItemOptions(fragment, scrimView, swipeback, !withoutScrollView, false);
+    }
+    public static ItemOptions makeOptions(@NonNull BaseFragment fragment, @NonNull View scrimView, boolean swipeback, boolean withoutScrollView, boolean shownFromBottom) {
+        return new ItemOptions(fragment, scrimView, swipeback, !withoutScrollView, shownFromBottom);
     }
 
     public static ItemOptions makeOptions(@NonNull ViewGroup container, @NonNull View scrimView) {
@@ -73,10 +77,13 @@ public class ItemOptions {
     }
 
     public static ItemOptions makeOptions(@NonNull ViewGroup container, @Nullable Theme.ResourcesProvider resourcesProvider, @NonNull View scrimView) {
-        return new ItemOptions(container, resourcesProvider, scrimView, false);
+        return new ItemOptions(container, resourcesProvider, scrimView, false, false);
     }
     public static ItemOptions makeOptions(@NonNull ViewGroup container, @Nullable Theme.ResourcesProvider resourcesProvider, @NonNull View scrimView, boolean swipeback) {
-        return new ItemOptions(container, resourcesProvider, scrimView, swipeback);
+        return new ItemOptions(container, resourcesProvider, scrimView, swipeback, false);
+    }
+    public static ItemOptions makeOptions(@NonNull ViewGroup container, @Nullable Theme.ResourcesProvider resourcesProvider, @NonNull View scrimView, boolean swipeback, boolean shownFromBottom) {
+        return new ItemOptions(container, resourcesProvider, scrimView, swipeback, shownFromBottom);
     }
 
     private ViewGroup container;
@@ -132,9 +139,9 @@ public class ItemOptions {
     private int foregroundIndex;
     private ActionBarPopupWindow.ActionBarPopupWindowLayout lastLayout;
 
-    public boolean swipeback, useScrollView;
+    public boolean swipeback, shownFromBottom, useScrollView;
 
-    private ItemOptions(BaseFragment fragment, View scrimView, boolean swipeback, boolean useScrollView) {
+    private ItemOptions(BaseFragment fragment, View scrimView, boolean swipeback, boolean useScrollView, boolean shownFromBottom) {
         if (fragment.getContext() == null) {
             return;
         }
@@ -146,11 +153,12 @@ public class ItemOptions {
         this.dimAlpha = AndroidUtilities.computePerceivedBrightness(Theme.getColor(Theme.key_windowBackgroundWhite, resourcesProvider)) > .705 ? 0x66 : 0x33;
         this.swipeback = swipeback;
         this.useScrollView = useScrollView;
+        this.shownFromBottom = shownFromBottom;
 
         init();
     }
 
-    private ItemOptions(ViewGroup container, Theme.ResourcesProvider resourcesProvider, View scrimView, boolean swipeback) {
+    private ItemOptions(ViewGroup container, Theme.ResourcesProvider resourcesProvider, View scrimView, boolean swipeback, boolean shownFromBottom) {
         if (container == null || container.getContext() == null) {
             return;
         }
@@ -161,6 +169,7 @@ public class ItemOptions {
         this.scrimView = scrimView;
         this.dimAlpha = AndroidUtilities.computePerceivedBrightness(Theme.getColor(Theme.key_windowBackgroundWhite, resourcesProvider)) > .705 ? 0x66 : 0x33;
         this.swipeback = swipeback;
+        this.shownFromBottom = shownFromBottom;
 
         init();
     }
@@ -174,7 +183,7 @@ public class ItemOptions {
     }
 
     private void init() {
-        lastLayout = new ActionBarPopupWindow.ActionBarPopupWindowLayout(context, R.drawable.popup_fixed_alert2, resourcesProvider, (swipeback ? ActionBarPopupWindow.ActionBarPopupWindowLayout.FLAG_USE_SWIPEBACK : 0) | (!useScrollView ? ActionBarPopupWindow.ActionBarPopupWindowLayout.FLAG_DONT_USE_SCROLLVIEW : 0)) {
+        lastLayout = new ActionBarPopupWindow.ActionBarPopupWindowLayout(context, R.drawable.popup_fixed_alert2, resourcesProvider, (swipeback ? ActionBarPopupWindow.ActionBarPopupWindowLayout.FLAG_USE_SWIPEBACK : 0) | (shownFromBottom ? ActionBarPopupWindow.ActionBarPopupWindowLayout.FLAG_SHOWN_FROM_BOTTOM : 0) | (!useScrollView ? ActionBarPopupWindow.ActionBarPopupWindowLayout.FLAG_DONT_USE_SCROLLVIEW : 0)) {
             @Override
             protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
                 if (this == layout && maxHeight > 0) {
@@ -212,6 +221,12 @@ public class ItemOptions {
         overridenSwipebackGravity = true;
         lastLayout.swipeBackGravityRight = right;
         lastLayout.swipeBackGravityBottom = bottom;
+        return this;
+    }
+
+    private boolean scaleOut;
+    public ItemOptions setScaleOut(boolean scaleOut) {
+        this.scaleOut = scaleOut;
         return this;
     }
 
@@ -669,6 +684,10 @@ public class ItemOptions {
     }
 
     public ItemOptions addText(CharSequence text, int textSizeDp, int maxWidth) {
+        return addText(text, textSizeDp, null, maxWidth);
+    }
+
+    public ItemOptions addText(CharSequence text, int textSizeDp, Typeface typeface, int maxWidth) {
         final TextView textView = new TextView(context) {
             @Override
             protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -680,6 +699,7 @@ public class ItemOptions {
         textView.setPadding(dp(13), dp(8), dp(13), dp(8));
         textView.setText(Emoji.replaceEmoji(text, textView.getPaint().getFontMetricsInt(), false));
         textView.setTag(R.id.fit_width_tag, 1);
+        textView.setTypeface(typeface);
         NotificationCenter.listenEmojiLoading(textView);
         if (maxWidth > 0) {
             textView.setMaxWidth(maxWidth);
@@ -809,7 +829,7 @@ public class ItemOptions {
     public ItemOptions setBlurBackground(BlurringShader.BlurManager blurManager, float ox, float oy) {
         Drawable baseDrawable = context.getResources().getDrawable(R.drawable.popup_fixed_alert2).mutate();
         if (layout instanceof ActionBarPopupWindow.ActionBarPopupWindowLayout) {
-            layout.setBackgroundDrawable(
+            layout.setBackground(
                 new BlurringShader.StoryBlurDrawer(blurManager, layout, BlurringShader.StoryBlurDrawer.BLUR_TYPE_MENU_BACKGROUND)
                     .makeDrawable(offsetX + ox + layout.getX(), offsetY + oy + layout.getY(), baseDrawable, dp(6))
             );
@@ -817,7 +837,7 @@ public class ItemOptions {
             for (int i = 0; i < layout.getChildCount(); ++i) {
                 View child = layout.getChildAt(i);
                 if (child instanceof ActionBarPopupWindow.ActionBarPopupWindowLayout) {
-                    child.setBackgroundDrawable(
+                    child.setBackground(
                         new BlurringShader.StoryBlurDrawer(blurManager, child, BlurringShader.StoryBlurDrawer.BLUR_TYPE_MENU_BACKGROUND)
                             .makeDrawable(offsetX + ox + layout.getX() + child.getX(), offsetY + oy + layout.getY() + child.getY(), baseDrawable, dp(6))
                     );
@@ -1113,13 +1133,21 @@ public class ItemOptions {
             container.dispatchTouchEvent(AndroidUtilities.emptyMotionEvent());
         }
 
+        actionBarPopupWindow.setScaleOut(scaleOut);
         actionBarPopupWindow.showAtLocation(
             container,
             0,
             (int) (offsetX = (X + this.translateX)),
             (int) (offsetY = (Y + this.translateY))
         );
+
         return this;
+    }
+
+    public void setTranslationY(float ty) {
+        if (actionBarPopupWindow != null) {
+            actionBarPopupWindow.update((int) offsetX, (int) (offsetY + ty), -1, -1);
+        }
     }
 
     public ItemOptions setBackgroundColor(int color) {

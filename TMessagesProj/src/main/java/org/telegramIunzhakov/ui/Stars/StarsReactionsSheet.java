@@ -134,68 +134,6 @@ public class StarsReactionsSheet extends BottomSheet implements NotificationCent
 
     private final BalanceCloud balanceCloud;
 
-    public static class BalanceCloud extends LinearLayout implements NotificationCenter.NotificationCenterDelegate {
-
-        private final int currentAccount;
-        private final TextView textView1;
-        private final LinkSpanDrawable.LinksTextView textView2;
-
-        public BalanceCloud(Context context, int currentAccount, Theme.ResourcesProvider resourcesProvider) {
-            super(context);
-            this.currentAccount = currentAccount;
-
-            setOrientation(VERTICAL);
-            setPadding(dp(18), dp(9), dp(18), dp(9));
-            setBackground(Theme.createRoundRectDrawable(dp(24), Theme.getColor(Theme.key_undo_background, resourcesProvider)));
-
-            textView1 = new TextView(context);
-            textView1.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
-            textView1.setTextColor(Theme.getColor(Theme.key_undo_infoColor, resourcesProvider));
-            textView1.setGravity(Gravity.CENTER);
-            addView(textView1, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 0, Gravity.CENTER, 0, 0, 0, 0));
-
-            textView2 = new LinkSpanDrawable.LinksTextView(context, resourcesProvider);
-            textView2.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
-            textView2.setTextColor(Theme.getColor(Theme.key_undo_cancelColor, resourcesProvider));
-            textView2.setLinkTextColor(Theme.getColor(Theme.key_undo_cancelColor, resourcesProvider));
-            textView2.setText(AndroidUtilities.replaceArrows(AndroidUtilities.replaceSingleTag(LocaleController.getString(R.string.Gift2MessageStarsInfoLink), () -> {
-                new StarsIntroActivity.StarsOptionsSheet(context, resourcesProvider).show();
-            }), true, dp(8f / 3f), dp(1)));
-            textView2.setGravity(Gravity.CENTER);
-            addView(textView2, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 0, Gravity.CENTER, 0, 1, 0, 0));
-
-            updateBalance(false);
-        }
-
-        private void updateBalance(boolean animated) {
-            final StarsController c = StarsController.getInstance(currentAccount);
-            final long stars = c.getBalance().amount;
-            textView1.setText(StarsIntroActivity.replaceStarsWithPlain(LocaleController.formatString(R.string.Gift2MessageStarsInfo, LocaleController.formatNumber(stars, ',')), .60f));
-        }
-
-        @Override
-        protected void onAttachedToWindow() {
-            super.onAttachedToWindow();
-            updateBalance(false);
-            NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.starBalanceUpdated);
-            NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.botStarsUpdated);
-        }
-
-        @Override
-        protected void onDetachedFromWindow() {
-            super.onDetachedFromWindow();
-            NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.starBalanceUpdated);
-            NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.botStarsUpdated);
-        }
-
-        @Override
-        public void didReceivedNotification(int id, int account, Object... args) {
-            if (id == NotificationCenter.starBalanceUpdated) {
-                updateBalance(true);
-            }
-        }
-    }
-
     @Override
     protected void appendOpenAnimator(boolean opening, ArrayList<Animator> animators) {
         animators.add(ObjectAnimator.ofFloat(balanceCloud, View.ALPHA, opening ? 1.0f : 0.0f));

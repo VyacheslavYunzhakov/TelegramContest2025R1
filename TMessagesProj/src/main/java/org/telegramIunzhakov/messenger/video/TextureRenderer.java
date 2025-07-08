@@ -49,6 +49,7 @@ import org.telegramIunzhakov.messenger.Emoji;
 import org.telegramIunzhakov.messenger.FileLog;
 import org.telegramIunzhakov.messenger.LocaleController;
 import org.telegramIunzhakov.messenger.MediaController;
+import org.telegramIunzhakov.messenger.R;
 import org.telegramIunzhakov.messenger.UserConfig;
 import org.telegramIunzhakov.messenger.Utilities;
 import org.telegramIunzhakov.messenger.VideoEditedInfo;
