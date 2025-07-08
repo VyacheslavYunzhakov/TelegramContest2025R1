@@ -10,10 +10,11 @@ public enum ButtonType {
     SHARE(7),
     STOP(8),
     VOICE_CHAT(9),
-    LEAVE(10),
-    REPORT(11),
-    DISCUSS(12),
-    STORY(13); // Добавлен новый тип
+    LIVE_STREAM(10),
+    LEAVE(11),
+    REPORT(12),
+    DISCUSS(13),
+    STORY(14); // Добавлен новый тип
 
     private final int priority;
 

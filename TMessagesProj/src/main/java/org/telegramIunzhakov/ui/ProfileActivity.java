@@ -180,7 +180,6 @@ import org.telegramIunzhakov.ui.ActionBar.ActionBarPopupWindow;
 import org.telegramIunzhakov.ui.ActionBar.AlertDialog;
 import org.telegramIunzhakov.ui.ActionBar.BackDrawable;
 import org.telegramIunzhakov.ui.ActionBar.BaseFragment;
-import org.telegramIunzhakov.ui.ActionBar.BottomSheet;
 import org.telegramIunzhakov.ui.ActionBar.INavigationLayout;
 import org.telegramIunzhakov.ui.ActionBar.OKLCH;
 import org.telegramIunzhakov.ui.ActionBar.SimpleTextView;
@@ -320,9 +319,9 @@ import java.util.zip.ZipOutputStream;
 
 public class ProfileActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, DialogsActivity.DialogsActivityDelegate, SharedMediaLayout.SharedMediaPreloaderDelegate, ImageUpdater.ImageUpdaterDelegate, SharedMediaLayout.Delegate {
     private final static int PHONE_OPTION_CALL = 0,
-        PHONE_OPTION_COPY = 1,
-        PHONE_OPTION_telegramIunzhakov_CALL = 2,
-        PHONE_OPTION_telegramIunzhakov_VIDEO_CALL = 3;
+            PHONE_OPTION_COPY = 1,
+            PHONE_OPTION_TELEGRAM_CALL = 2,
+            PHONE_OPTION_TELEGRAM_VIDEO_CALL = 3;
     private final static float EXTRA_HEIGHT = 211f;
     private final static float START_AVATAR_SIZE = 42f;
     private final static float END_AVATAR_SIZE = 98f;
@@ -417,12 +416,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
     private boolean[] isOnline = new boolean[1];
 
-    private boolean callItemVisible;
-    private boolean videoCallItemVisible;
     private boolean editItemVisible;
     private ActionBarMenuItem animatingItem;
-    private ActionBarMenuItem callItem;
-    private ActionBarMenuItem videoCallItem;
     private ActionBarMenuItem editItem;
     private ActionBarMenuItem otherItem;
     private ActionBarMenuItem searchItem;
@@ -1687,16 +1682,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     editItem.setScaleY(1f - value);
                     editItem.setAlpha(1f - value);
                 }
-                if (callItemVisible) {
-                    callItem.setScaleX(1f - value);
-                    callItem.setScaleY(1f - value);
-                    callItem.setAlpha(1f - value);
-                }
-                if (videoCallItemVisible) {
-                    videoCallItem.setScaleX(1f - value);
-                    videoCallItem.setScaleY(1f - value);
-                    videoCallItem.setAlpha(1f - value);
-                }
                 setScaleX(value);
                 setScaleY(value);
                 setAlpha(value);
@@ -1712,12 +1697,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         if (editItemVisible) {
                             editItem.setVisibility(GONE);
                         }
-                        if (callItemVisible) {
-                            callItem.setVisibility(GONE);
-                        }
-                        if (videoCallItemVisible) {
-                            videoCallItem.setVisibility(GONE);
-                        }
                     } else {
                         setVisibility(GONE);
                     }
@@ -1732,12 +1711,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     if (editItemVisible) {
                         editItem.setVisibility(VISIBLE);
                     }
-                    if (callItemVisible) {
-                        callItem.setVisibility(VISIBLE);
-                    }
-                    if (videoCallItemVisible) {
-                        videoCallItem.setVisibility(VISIBLE);
-                    }
+
                     setVisibility(VISIBLE);
                     updateStoriesViewBounds(false);
                 }
@@ -1865,9 +1839,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         }
 
         private ActionBarMenuItem getSecondaryMenuItem() {
-            if (callItemVisible) {
-                return callItem;
-            } else if (editItemVisible) {
+            if (editItemVisible) {
                 return editItem;
             } else if (searchItem != null) {
                 return searchItem;
@@ -3440,8 +3412,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 avatarContainer2.setPivotX(avatarContainer2.getMeasuredWidth() / 2f);
                 AndroidUtilities.updateViewVisibilityAnimated(avatarContainer2, !expanded, 0.95f, true);
 
-                callItem.setVisibility(expanded || !callItemVisible ? GONE : INVISIBLE);
-                videoCallItem.setVisibility(expanded || !videoCallItemVisible ? GONE : INVISIBLE);
                 editItem.setVisibility(expanded || !editItemVisible ? GONE : INVISIBLE);
                 otherItem.setVisibility(expanded ? GONE : INVISIBLE);
                 if (qrItem != null) {
@@ -3597,19 +3567,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
         }
 
-        videoCallItem = menu.addItem(video_call_item, R.drawable.profile_video);
-        videoCallItem.setContentDescription(LocaleController.getString(R.string.VideoCall));
-        if (chatId != 0) {
-            callItem = menu.addItem(call_item, R.drawable.msg_voicechat2);
-            if (ChatObject.isChannelOrGiga(currentChat)) {
-                callItem.setContentDescription(LocaleController.getString(R.string.VoipChannelVoiceChat));
-            } else {
-                callItem.setContentDescription(LocaleController.getString(R.string.VoipGroupVoiceChat));
-            }
-        } else {
-            callItem = menu.addItem(call_item, R.drawable.ic_call);
-            callItem.setContentDescription(LocaleController.getString(R.string.Call));
-        }
         if (myProfile) {
             editItem = menu.addItem(edit_profile, R.drawable.group_edit_profile);
             editItem.setContentDescription(LocaleController.getString(R.string.Edit));
@@ -5036,7 +4993,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
         frameLayout.addView(actionBar);
 
-        float rightMargin = (54 + ((callItemVisible && userId != 0) ? 54 : 0));
+        float rightMargin = 54;
         boolean hasTitleExpanded = false;
         int initialTitleWidth = LayoutHelper.WRAP_CONTENT;
         if (parentLayout != null && parentLayout.getLastFragment() instanceof ChatActivity) {
@@ -5470,9 +5427,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     }
 
     private boolean shouldShowButton(ButtonType buttonType) {
-        if (actionBar == null || otherItem == null) {
-            return false;
-        }
 
         if (isBot) {
             switch (buttonType) {
@@ -5516,6 +5470,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             TLRPC.Chat chat = getMessagesController().getChat(chatId);
             if (chat == null) return false;
 
+            boolean voiceChatVisible = chatInfo != null &&
+                    getMessagesController().getGroupCall(chatId, false) != null;
+            boolean liveStreamVisible = ChatObject.canManageCalls(chat) &&
+                    chatInfo != null &&
+                    getMessagesController().getGroupCall(chatId, false) == null;
+
             boolean isChannel = ChatObject.isChannel(chat);
             boolean joined = !chat.left && !chat.kicked;
             boolean isMegagroup = isChannel && chat.megagroup;
@@ -5527,6 +5487,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     case STORY:
                     case GIFT:
                         return true;
+                    case VOICE_CHAT:
+                        return voiceChatVisible;
+                    case LIVE_STREAM:
+                        return liveStreamVisible;
                     default:
                         return false;
                 }
@@ -5543,6 +5507,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 !getMessagesController().premiumPurchaseBlocked() &&
                                 chatInfo != null &&
                                 chatInfo.stargifts_available;
+                    case VOICE_CHAT:
+                        return voiceChatVisible;
+                    case LIVE_STREAM:
+                        return liveStreamVisible;
                     case SHARE:
                         return true;
                     case REPORT:
@@ -5550,18 +5518,13 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     default:
                         return false;
                 }
-            }
-            else if (joined) {
+            } else if (joined) {
                 boolean writeButtonVisible = (imageUpdater == null || setAvatarRow == -1) &&
                         ChatObject.isChannel(chat) &&
                         !chat.megagroup &&
                         chatInfo != null &&
                         chatInfo.linked_chat_id != 0 &&
                         infoHeaderRow != -1;
-
-                boolean voiceChatVisible = ChatObject.canManageCalls(chat) &&
-                        chatInfo != null &&
-                        chatInfo.call == null;
 
                 boolean storiesVisible = chat.creator ||
                         (chat.admin_rights != null && chat.admin_rights.edit_stories);
@@ -5585,33 +5548,31 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 (isMegagroup || !isTopic);
                     case VOICE_CHAT:
                         return voiceChatVisible;
+                    case LIVE_STREAM:
+                        return liveStreamVisible;
                     case STORY:
                         return storiesVisible && !isMegagroup;
                     default:
                         return false;
                 }
             }
-        }
-        if (chatId != 0 && !ChatObject.isChannel(getMessagesController().getChat(chatId))) {
-            TLRPC.Chat chat = getMessagesController().getChat(chatId);
-            if (chat == null) return false;
+            if (!ChatObject.isChannel(getMessagesController().getChat(chatId))) {
 
-            boolean voiceChatVisible = ChatObject.canManageCalls(chat) &&
-                    chatInfo != null &&
-                    chatInfo.call == null;
-
-            switch (buttonType) {
-                case MESSAGE:
-                    return true;
-                case MUTE:
-                    return true;
-                case VOICE_CHAT:
-                    return voiceChatVisible;
-                case LEAVE:
-                    return !ChatObject.isKickedFromChat(chat) &&
-                            !ChatObject.isLeftFromChat(chat);
-                default:
-                    return false;
+                switch (buttonType) {
+                    case MESSAGE:
+                        return true;
+                    case MUTE:
+                        return true;
+                    case VOICE_CHAT:
+                        return voiceChatVisible;
+                    case LIVE_STREAM:
+                        return liveStreamVisible;
+                    case LEAVE:
+                        return !ChatObject.isKickedFromChat(chat) &&
+                                !ChatObject.isLeftFromChat(chat);
+                    default:
+                        return false;
+                }
             }
         }
 
@@ -5976,6 +5937,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             case LEAVE: return R.drawable.leave;
             case REPORT: return R.drawable.report;
             case DISCUSS: return R.drawable.message;
+            case LIVE_STREAM: return R.drawable.live_stream;
             default: return 0;
         }
     }
@@ -5995,13 +5957,16 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             case LEAVE: return "Leave";
             case REPORT: return "Report";
             case DISCUSS: return "Discuss";
+            case LIVE_STREAM: return "Live stream";
             default: return "";
         }
     }
 
     private View.OnClickListener getClickListener(ButtonType type) {
         switch (type) {
-            case VOICE_CHAT: return v -> voiceChatAction();
+            case VOICE_CHAT:
+            case LIVE_STREAM:
+                return v -> voiceChatAction();
             case STORY: return v -> storyAction();
             case JOIN: return v -> joinAction();
             case MESSAGE: return v -> messageAction();
@@ -7015,11 +6980,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (userInfo != null && userInfo.phone_calls_available) {
                     icons.add(R.drawable.msg_calls);
                     items.add(LocaleController.getString(R.string.CallViaTelegram));
-                    actions.add(PHONE_OPTION_telegramIunzhakov_CALL);
+                    actions.add(PHONE_OPTION_TELEGRAM_CALL);
                     if (Build.VERSION.SDK_INT >= 18 && userInfo.video_calls_available) {
                         icons.add(R.drawable.msg_videocall);
                         items.add(LocaleController.getString(R.string.VideoCallViaTelegram));
-                        actions.add(PHONE_OPTION_telegramIunzhakov_VIDEO_CALL);
+                        actions.add(PHONE_OPTION_TELEGRAM_VIDEO_CALL);
                     }
                 }
                 if (!isFragmentPhoneNumber) {
@@ -7076,12 +7041,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 FileLog.e(e);
                             }
                             break;
-                        case PHONE_OPTION_telegramIunzhakov_CALL:
-                        case PHONE_OPTION_telegramIunzhakov_VIDEO_CALL:
+                        case PHONE_OPTION_TELEGRAM_CALL:
+                        case PHONE_OPTION_TELEGRAM_VIDEO_CALL:
                             if (getParentActivity() == null) {
                                 return;
                             }
-                            VoIPHelper.startCall(user, action == PHONE_OPTION_telegramIunzhakov_VIDEO_CALL, userInfo != null && userInfo.video_calls_available, getParentActivity(), userInfo, getAccountInstance());
+                            VoIPHelper.startCall(user, action == PHONE_OPTION_TELEGRAM_VIDEO_CALL, userInfo != null && userInfo.video_calls_available, getParentActivity(), userInfo, getAccountInstance());
                             break;
                     }
                 });
@@ -7456,8 +7421,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
             topView.invalidate();
             otherItem.setIconColor(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon));
-            callItem.setIconColor(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon));
-            videoCallItem.setIconColor(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon));
             editItem.setIconColor(peerColor != null ? Color.WHITE : getThemedColor(Theme.key_actionBarDefaultIcon));
 
             if (verifiedDrawable[0] != null) {
@@ -7496,7 +7459,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
             updateEmojiStatusDrawableColor();
 
-            if (avatarsViewPagerIndicatorView.getSecondaryMenuItem() != null && (videoCallItemVisible || editItemVisible || callItemVisible)) {
+            if (avatarsViewPagerIndicatorView.getSecondaryMenuItem() != null && editItemVisible) {
                 needLayoutText(Math.min(1f, extraHeight / AndroidUtilities.dp(EXTRA_HEIGHT)));
             }
         }
@@ -7522,12 +7485,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         ImageView mediaOptionsItem = sharedMediaLayout.getSearchOptionsItem();
         TextView saveItem = sharedMediaLayout.getSaveItem();
         if (!mediaHeaderVisible) {
-            if (callItemVisible) {
-                callItem.setVisibility(View.VISIBLE);
-            }
-            if (videoCallItemVisible) {
-                videoCallItem.setVisibility(View.VISIBLE);
-            }
             if (editItemVisible) {
                 editItem.setVisibility(View.VISIBLE);
             }
@@ -7561,12 +7518,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
         ArrayList<Animator> animators = new ArrayList<>();
 
-        animators.add(ObjectAnimator.ofFloat(callItem, View.ALPHA, visible ? 0.0f : 1.0f));
-        animators.add(ObjectAnimator.ofFloat(videoCallItem, View.ALPHA, visible ? 0.0f : 1.0f));
         animators.add(ObjectAnimator.ofFloat(otherItem, View.ALPHA, visible ? 0.0f : 1.0f));
         animators.add(ObjectAnimator.ofFloat(editItem, View.ALPHA, visible ? 0.0f : 1.0f));
-        animators.add(ObjectAnimator.ofFloat(callItem, View.TRANSLATION_Y, visible ? -AndroidUtilities.dp(10) : 0.0f));
-        animators.add(ObjectAnimator.ofFloat(videoCallItem, View.TRANSLATION_Y, visible ? -AndroidUtilities.dp(10) : 0.0f));
         animators.add(ObjectAnimator.ofFloat(otherItem, View.TRANSLATION_Y, visible ? -AndroidUtilities.dp(10) : 0.0f));
         animators.add(ObjectAnimator.ofFloat(editItem, View.TRANSLATION_Y, visible ? -AndroidUtilities.dp(10) : 0.0f));
         animators.add(ObjectAnimator.ofFloat(mediaSearchItem, View.ALPHA, visible ? 1.0f : 0.0f));
@@ -7594,12 +7547,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             public void onAnimationEnd(Animator animation) {
                 if (headerAnimatorSet != null) {
                     if (mediaHeaderVisible) {
-                        if (callItemVisible) {
-                            callItem.setVisibility(View.GONE);
-                        }
-                        if (videoCallItemVisible) {
-                            videoCallItem.setVisibility(View.GONE);
-                        }
                         if (editItemVisible) {
                             editItem.setVisibility(View.GONE);
                         }
@@ -8468,12 +8415,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         if (editItemVisible) {
             extra += 48;
         }
-        if (callItemVisible) {
-            extra += 48;
-        }
-        if (videoCallItemVisible) {
-            extra += 48;
-        }
         if (searchItem != null) {
             extra += 48;
         }
@@ -8737,7 +8678,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         listAdapter.notifyItemChanged(bioRow);
                     }
                 } else {
-                    if (!openAnimationInProgress && !callItemVisible) {
+                    if (!openAnimationInProgress) {
                         createActionBarMenu(true);
                     } else {
                         recreateMenuAfterAnimation = true;
@@ -9390,14 +9331,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     animatingItem.setAlpha(1.0f);
                     animators.add(ObjectAnimator.ofFloat(animatingItem, View.ALPHA, 0.0f));
                 }
-                if (callItemVisible && (chatId != 0 || fromChat)) {
-                    callItem.setAlpha(0.0f);
-                    animators.add(ObjectAnimator.ofFloat(callItem, View.ALPHA, 1.0f));
-                }
-                if (videoCallItemVisible) {
-                    videoCallItem.setAlpha(0.0f);
-                    animators.add(ObjectAnimator.ofFloat(videoCallItem, View.ALPHA, 1.0f));
-                }
                 if (editItemVisible) {
                     editItem.setAlpha(0.0f);
                     animators.add(ObjectAnimator.ofFloat(editItem, View.ALPHA, 1.0f));
@@ -9479,14 +9412,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (animatingItem != null) {
                     animatingItem.setAlpha(0.0f);
                     animators.add(ObjectAnimator.ofFloat(animatingItem, View.ALPHA, 1.0f));
-                }
-                if (callItemVisible && (chatId != 0 || fromChat)) {
-                    callItem.setAlpha(1.0f);
-                    animators.add(ObjectAnimator.ofFloat(callItem, View.ALPHA, 0.0f));
-                }
-                if (videoCallItemVisible) {
-                    videoCallItem.setAlpha(1.0f);
-                    animators.add(ObjectAnimator.ofFloat(videoCallItem, View.ALPHA, 0.0f));
                 }
                 if (editItemVisible) {
                     editItem.setAlpha(1.0f);
@@ -11188,8 +11113,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         animatingItem = null;
 
         editItemVisible = false;
-        callItemVisible = false;
-        videoCallItemVisible = false;
         canSearchMembers = false;
         boolean selfUser = false;
 
@@ -11217,10 +11140,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     editItemVisible = true;
                 }
 
-                if (userInfo != null && userInfo.phone_calls_available) {
-                    callItemVisible = true;
-                    videoCallItemVisible = Build.VERSION.SDK_INT >= 18 && userInfo.video_calls_available;
-                }
                 if (isBot || getContactsController().contactsDict.get(userId) == null) {
                     if (MessagesController.isSupportUser(user)) {
                         if (userBlocked) {
@@ -11306,7 +11225,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         otherItem.addSubItem(statistics, R.drawable.msg_stats, LocaleController.getString(R.string.Statistics));
                     }
                     ChatObject.Call call = getMessagesController().getGroupCall(chatId, false);
-                    callItemVisible = call != null;
                 }
                 if (chat.megagroup) {
                     if (chatInfo == null || !chatInfo.participants_hidden || ChatObject.hasAdminRights(chat)) {
@@ -11345,7 +11263,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         hasVoiceChatItem = true;
                     }
                     ChatObject.Call call = getMessagesController().getGroupCall(chatId, false);
-                    callItemVisible = call != null;
                 }
                 if (ChatObject.canChangeChatInfo(chat)) {
                     editItemVisible = true;
@@ -11386,32 +11303,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             otherItem.hideSubItem(delete_avatar);
         }
         if (!mediaHeaderVisible) {
-            if (callItemVisible) {
-                if (callItem.getVisibility() != View.VISIBLE) {
-                    callItem.setVisibility(View.VISIBLE);
-                    if (animated) {
-                        callItem.setAlpha(0);
-                        callItem.animate().alpha(1f).setDuration(150).start();
-                    }
-                }
-            } else {
-                if (callItem.getVisibility() != View.GONE) {
-                    callItem.setVisibility(View.GONE);
-                }
-            }
-            if (videoCallItemVisible) {
-                if (videoCallItem.getVisibility() != View.VISIBLE) {
-                    videoCallItem.setVisibility(View.VISIBLE);
-                    if (animated) {
-                        videoCallItem.setAlpha(0);
-                        videoCallItem.animate().alpha(1f).setDuration(150).start();
-                    }
-                }
-            } else {
-                if (videoCallItem.getVisibility() != View.GONE) {
-                    videoCallItem.setVisibility(View.GONE);
-                }
-            }
             if (editItemVisible) {
                 if (editItem.getVisibility() != View.VISIBLE) {
                     editItem.setVisibility(View.VISIBLE);
@@ -11432,16 +11323,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     editItem.setVisibility(View.GONE);
                     editItem.animate().cancel();
                     editItem.setAlpha(1f);
-                }
-                if (callItemVisible) {
-                    callItem.setVisibility(View.GONE);
-                    callItem.animate().cancel();
-                    callItem.setAlpha(1f);
-                }
-                if (videoCallItemVisible) {
-                    videoCallItem.setVisibility(View.GONE);
-                    videoCallItem.animate().cancel();
-                    videoCallItem.setAlpha(1f);
                 }
             }
         }
