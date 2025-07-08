@@ -69,7 +69,6 @@ public class ProfileButton extends FrameLayout {
         background.setAlpha(102);
         setBackground(background);
 
-        // Внутренний вертикальный контейнер
         LinearLayout innerLayout = new LinearLayout(context);
         innerLayout.setOrientation(LinearLayout.VERTICAL);
         innerLayout.setGravity(Gravity.TOP);
@@ -109,25 +108,8 @@ public class ProfileButton extends FrameLayout {
     }
 
     public void updateContent(ButtonData data) {
-            // Анимация изменения иконки
-            icon.animate()
-                    .alpha(0)
-                    .setDuration(100)
-                    .withEndAction(() -> {
-                        icon.setImageResource(data.getImageResId());
-                        icon.animate().alpha(1).setDuration(100).start();
-                    })
-                    .start();
-
-            // Анимация изменения текста
-            textView.animate()
-                    .alpha(0)
-                    .setDuration(100)
-                    .withEndAction(() -> {
-                        textView.setText(data.getText());
-                        textView.animate().alpha(1).setDuration(100).start();
-                    })
-                    .start();
+        icon.setImageResource(data.getImageResId());
+        textView.setText(data.getText());
     }
 
 
