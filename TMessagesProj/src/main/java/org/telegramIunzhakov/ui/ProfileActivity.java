@@ -1190,7 +1190,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 width,
                                 extraHeight,
                                 1,
-                                patternScale
+                                extraHeight/dp(EXTRA_HEIGHT)
                         );
 
                         canvas.restore();

@@ -104,16 +104,16 @@ public class StarGiftPatterns {
             -65f, 38f, 25, 0.22f,
             65f, 38f, 25, 0.22f,
 
-            -145, 5, 20, 0.15f,
-            145, 5, 20, 0.15f,
             107f, -55f, 20, 0.15f,
-            50, -80f, 20, 0.15f,
-            -50, -80f, 20, 0.15f,
             -107f, -55f, 20, 0.15f,
             -109f, 62f, 20, 0.15f,
+            109f, 62f, 20, 0.15f,
             -50, 90f, 20, 0.15f,
             50, 90f, 20, 0.15f,
-            109f, 62f, 20, 0.15f,
+            50, -80f, 20, 0.15f,
+            -50, -80f, 20, 0.15f,
+            -145, 5, 20, 0.15f,
+            145, 5, 20, 0.15f,
         }
     };
 
@@ -134,11 +134,24 @@ public class StarGiftPatterns {
                 cx = y;
                 cy = x;
             }
-            cx *= scale;
-            cy *= scale;
-            sz *= scale;
-            pattern.setBounds((int) (dp(cx) - dp(sz) / 2.0f), (int) (dp(cy) - dp(sz) / 2.0f), (int) (dp(cx) + dp(sz) / 2.0f), (int) (dp(cy) + dp(sz) / 2.0f));
+            float pointScale = scale;
+            if (type == TYPE_PROFILE) {
+                int pointIndex = i / 4;
+                if (pointIndex <= 3 || pointIndex >= 12) {
+                    final float threshold = 0.7f;
+                    if (scale > threshold) {
+                        pointScale = 1.0f - 0.2f * (1 - scale);
+                    } else {
+                        float valueAtThreshold = 1.0f - 0.2f * (1 - threshold);
+                        pointScale = valueAtThreshold * (scale / threshold);
+                    }
+                }
+            }
+            cx *= pointScale;
+            cy *= pointScale;
+            sz *= pointScale;
 
+            pattern.setBounds((int) (dp(cx) - dp(sz) / 2.0f), (int) (dp(cy) - dp(sz) / 2.0f), (int) (dp(cx) + dp(sz) / 2.0f), (int) (dp(cy) + dp(sz) / 2.0f));
             pattern.setAlpha((int) (0xFF * alpha * thisAlpha));
             pattern.draw(canvas);
         }
