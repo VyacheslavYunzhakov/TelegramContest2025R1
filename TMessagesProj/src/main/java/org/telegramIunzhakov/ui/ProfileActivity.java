@@ -330,6 +330,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private final static float AVATAR_LEFT_MARGIN = 64f;
     private final static float TEXTS_LEFT_MARGIN= 118f;
     private final static float BUTTONS_CONTAINER_SIZE = 88;
+    private final static float EMOJI_SIZE = 34f;
     private final Paint mainPaint =          new Paint(Paint.ANTI_ALIAS_FLAG);
     private final static int WHITE = 0xFFFFFFFF;
     private final static int BLACK = 0x00000000;
@@ -7782,7 +7783,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (nameTextView[a] == null) {
                     continue;
                 }
-                float nameWidth = Math.min(nameTextView[a].totalWidth, nameTextView[a].getMaxTextWidth());
+                float nameWidth = Math.min(nameTextView[a].totalWidth, nameTextView[a].getMaxTextWidth())
+                        + (emojiStatusDrawable[1] != null ? dp(EMOJI_SIZE) : 0)
+                        + (starBgItem!=null ? starBgItem.getWidth() : 0);
                 nameX = (screenCenterX - (nameWidth * nameScale) / 2f - TEXTS_LEFT_MARGIN * density) * diff - leftOffset;
                 if (expandAnimator == null || !expandAnimator.isRunning()) {
                     nameTextView[a].setTranslationX(nameX);
@@ -8206,10 +8209,14 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         continue;
                     }
                     if (nameTextView[a].totalWidth != 0) {
-                        float nameWidth = Math.min(nameTextView[a].totalWidth, nameTextView[a].getMaxTextWidth());
+                        float nameWidth = Math.min(nameTextView[a].totalWidth, nameTextView[a].getMaxTextWidth())
+                                + (emojiStatusDrawable[1] != null ? dp(EMOJI_SIZE) : 0)
+                                + (starBgItem!=null ? starBgItem.getWidth() : 0);
                         nameX = (screenCenterX - (nameWidth * nameScale) / 2f - TEXTS_LEFT_MARGIN * density) * diff;
                     } else {
-                        float nameWidth = nameTextView[a].getTextWidth() + nameTextView[a].getRightDrawableWidth();
+                        float nameWidth = Math.min(nameTextView[a].totalWidth, nameTextView[a].getMaxTextWidth())
+                                + (emojiStatusDrawable[1] != null ? dp(EMOJI_SIZE) : 0)
+                                + (starBgItem!=null ? starBgItem.getWidth() : 0);
                         nameX = (screenCenterX - (nameWidth * nameScale) / 2f - TEXTS_LEFT_MARGIN * density) * diff;
                     }
                     if (expandAnimator == null || !expandAnimator.isRunning()) {
