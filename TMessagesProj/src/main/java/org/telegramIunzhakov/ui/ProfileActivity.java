@@ -7779,13 +7779,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 showStatusButton.setAlpha((int) (0xFF * diff));
             }
             for (int a = 0; a < nameTextView.length; a++) {
-                onlineX = (screenCenterX - onlineTextView[a].totalWidth / 2f - (TEXTS_LEFT_MARGIN - (a == 1 || a == 2 || a == 3 ? 4 : 0)) * density) * diff - leftOffset;
+                onlineX = (screenCenterX - onlineTextView[a].getTextWidth() / 2f - (TEXTS_LEFT_MARGIN - (a == 1 || a == 2 || a == 3 ? 4 : 0)) * density) * diff - leftOffset;
                 if (nameTextView[a] == null) {
                     continue;
                 }
-                float nameWidth = Math.min(nameTextView[a].totalWidth, nameTextView[a].getMaxTextWidth())
-                        + (emojiStatusDrawable[1] != null ? dp(EMOJI_SIZE) : 0)
-                        + (starBgItem!=null ? starBgItem.getWidth() : 0);
+                float nameWidth = Math.min(nameTextView[a].getTextWidth(), nameTextView[a].getMaxTextWidth())
+                        + + nameTextView[a].getRightDrawableWidth();
                 nameX = (screenCenterX - (nameWidth * nameScale) / 2f - TEXTS_LEFT_MARGIN * density) * diff - leftOffset;
                 if (expandAnimator == null || !expandAnimator.isRunning()) {
                     nameTextView[a].setTranslationX(nameX);
@@ -8199,26 +8198,13 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     showStatusButton.setAlpha((int) (0xFF * diff));
                 }
                 for (int a = 0; a < nameTextView.length; a++) {
-                    if (onlineTextView[a].totalWidth != 0) {
-                        onlineX = (screenCenterX - onlineTextView[a].totalWidth / 2f - (TEXTS_LEFT_MARGIN - (a == 1 || a == 2 || a == 3 ? 4 : 0)) * density) * diff;
-                    } else {
-                        float onlineWidth = onlineTextView[a].getTextWidth();
-                        onlineX = (screenCenterX - onlineWidth / 2f - (TEXTS_LEFT_MARGIN - (a == 1 || a == 2 || a == 3 ? 4 : 0)) * density) * diff;
-                    }
+                        onlineX = (screenCenterX - onlineTextView[a].getTextWidth() / 2f - (TEXTS_LEFT_MARGIN - (a == 1 || a == 2 || a == 3 ? 4 : 0)) * density) * diff;
                     if (nameTextView[a] == null) {
                         continue;
                     }
-                    if (nameTextView[a].totalWidth != 0) {
-                        float nameWidth = Math.min(nameTextView[a].totalWidth, nameTextView[a].getMaxTextWidth())
-                                + (emojiStatusDrawable[1] != null ? dp(EMOJI_SIZE) : 0)
-                                + (starBgItem!=null ? starBgItem.getWidth() : 0);
-                        nameX = (screenCenterX - (nameWidth * nameScale) / 2f - TEXTS_LEFT_MARGIN * density) * diff;
-                    } else {
-                        float nameWidth = Math.min(nameTextView[a].totalWidth, nameTextView[a].getMaxTextWidth())
-                                + (emojiStatusDrawable[1] != null ? dp(EMOJI_SIZE) : 0)
-                                + (starBgItem!=null ? starBgItem.getWidth() : 0);
-                        nameX = (screenCenterX - (nameWidth * nameScale) / 2f - TEXTS_LEFT_MARGIN * density) * diff;
-                    }
+                    float nameWidth = Math.min(nameTextView[a].getTextWidth(), nameTextView[a].getMaxTextWidth())
+                                + nameTextView[a].getRightDrawableWidth();
+                    nameX = (screenCenterX - (nameWidth * nameScale) / 2f - TEXTS_LEFT_MARGIN * density) * diff;
                     if (expandAnimator == null || !expandAnimator.isRunning()) {
                         nameTextView[a].setTranslationX(nameX);
                         nameTextView[a].setTranslationY(nameY);
@@ -11034,7 +11020,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private void setTextWithPositioning(int a, String text) {
         float screenCenterX = AndroidUtilities.isTablet() ? AndroidUtilities.dp(490/2f) : displayMetrics.widthPixels / 2f;
         float v = TEXTS_LEFT_MARGIN - (a == 1 || a == 2 || a == 3 ? 4 : 0);
-        if (onlineX == (screenCenterX - onlineTextView[a].totalWidth / 2f - v * density)){
+        if (onlineX == (screenCenterX - onlineTextView[a].getTextWidth() / 2f - v * density)){
             onlineTextView[a].setText(text);
             onlineX = (screenCenterX - onlineTextView[a].getTextWidth() / 2f - v * density);
             onlineTextView[a].setTranslationX(onlineX);
