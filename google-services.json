@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "662806333805",
+    "project_id": "telegramiunzhakov",
+    "storage_bucket": "telegramiunzhakov.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:662806333805:android:c48c71c518156809087264",
+        "android_client_info": {
+          "package_name": "org.telegramIunzhakov.messenger"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDaD80CZfIgpdjDUDCJj-_vtKGKfGb1fjE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:662806333805:android:c40f682204615100087264",
+        "android_client_info": {
+          "package_name": "org.telegramIunzhakov.messenger.beta"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDaD80CZfIgpdjDUDCJj-_vtKGKfGb1fjE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

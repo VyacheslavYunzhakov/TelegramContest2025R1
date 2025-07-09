@@ -41,6 +41,7 @@ public class ProfileGiftsView extends View implements NotificationCenter.Notific
     private final View avatarContainer;
     private final ProfileActivity.AvatarImageView avatarImage;
     private final Theme.ResourcesProvider resourcesProvider;
+    private float avatarExpandProgress;
 
     public ProfileGiftsView(Context context, int currentAccount, long dialogId, @NonNull View avatarContainer, ProfileActivity.AvatarImageView avatarImage, Theme.ResourcesProvider resourcesProvider) {
         super(context);
@@ -319,6 +320,10 @@ public class ProfileGiftsView extends View implements NotificationCenter.Notific
 
     public final AnimatedFloat animatedCount = new AnimatedFloat(this, 0, 320, CubicBezierInterpolator.EASE_OUT_QUINT);
 
+    public void setAvatarExpandProgress(float progress) {
+        this.avatarExpandProgress = progress;
+    }
+
     @Override
     protected void dispatchDraw(@NonNull Canvas canvas) {
         if (gifts.isEmpty() || expandProgress >= 1.0f) return;
@@ -339,84 +344,60 @@ public class ProfileGiftsView extends View implements NotificationCenter.Notific
 
         final float closedAlpha = Utilities.clamp01((float) (expandY - (AndroidUtilities.statusBarHeight + ActionBar.getCurrentActionBarHeight())) / dp(50));
 
+        final float[] thresholds = {0.15f, 0.2f, 0.4f, 0.45f, 0.6f, 0.65f};
+        final float animationRange = 0.35f;
+
         for (int i = 0; i < gifts.size(); ++i) {
             final Gift gift = gifts.get(i);
             final float alpha = gift.animatedFloat.set(1.0f);
             final float scale = lerp(0.5f, 1.0f, alpha);
             final int index = i; // gifts.size() == maxCount ? i - 1 : i;
+            float startX, startY;
+
             if (index == 0) {
-                gift.draw(
-                    canvas,
-                    (float) (acx + ar * Math.cos(-65 / 180.0f * Math.PI)),
-                    (float) (acy + ar * Math.sin(-65 / 180.0f * Math.PI)),
-                    scale, -65 + 90,
-                    alpha * (1.0f - expandProgress), lerp(0.9f, 0.25f, actionBarProgress)
-                );
+                startX = acx + dp(70) + aw/2;
+                startY = acy - dp (8);
             } else if (index == 1) {
-                gift.draw(
-                    canvas,
-                    lerp(cacx + Math.min(getWidth() * .27f, dp(62)), cx, 0.5f * actionBarProgress), acy - dp(52),
-                    scale, -4.0f,
-                    alpha * alpha * (1.0f - expandProgress) * (1.0f - actionBarProgress) * (closedAlpha),
-                    1.0f
-                );
+                startX = acx - dp(70) - aw/2;
+                startY = acy + dp (2);
             } else if (index == 2) {
-                gift.draw(
-                    canvas,
-                    lerp(cacx + Math.min(getWidth() * .46f, dp(105)), cx, 0.5f * actionBarProgress), acy - dp(72),
-                    scale, 8.0f,
-                    alpha * (1.0f - expandProgress) * (1.0f - actionBarProgress) * (closedAlpha),
-                    1.0f
-                );
+                startX = acx + dp(30) + aw/2;
+                startY = ay + dp(2);
             } else if (index == 3) {
-                gift.draw(
-                    canvas,
-                    lerp(cacx + Math.min(getWidth() * .60f, dp(136)), cx, 0.5f * actionBarProgress), acy - dp(46),
-                    scale, 3.0f,
-                    alpha * (1.0f - expandProgress) * (1.0f - actionBarProgress) * (closedAlpha),
-                    1.0f
-                );
+                startX = acx - dp(40) - aw/2;
+                startY = ay + ah;
             } else if (index == 4) {
-                gift.draw(
-                    canvas,
-                    lerp(cacx + Math.min(getWidth() * .08f, dp(21.6f)), cx, 0.5f * actionBarProgress), acy - dp(82f),
-                    scale, -3.0f,
-                    alpha * (1.0f - expandProgress) * (1.0f - actionBarProgress) * (closedAlpha),
-                    1.0f
-                );
+                startX = acx - dp(30) - aw/2;
+                startY = ay - dp(5);
             } else if (index == 5) {
-                gift.draw(
-                    canvas,
-                    lerp(cacx + Math.min(getWidth() * .745f, dp(186)), cx, 0.5f * actionBarProgress), acy - dp(39),
-                    scale, 2.0f,
-                    alpha * (1.0f - expandProgress) * (1.0f - actionBarProgress) * (closedAlpha),
-                    1.0f
-                );
-            } else if (index == 6) {
-                gift.draw(
-                    canvas,
-                    cacx + Math.min(getWidth() * .38f, dp(102)), expandY - dp(12),
-                    scale, 0,
-                    alpha * (1.0f - expandProgress) * (1.0f - actionBarProgress) * (closedAlpha),
-                    1.0f
-                );
-            } else if (index == 7) {
-                gift.draw(
-                    canvas,
-                    cacx + Math.min(getWidth() * .135f, dp(36)), expandY - dp(17.6f),
-                    scale, -5.0f,
-                    alpha * (1.0f - expandProgress) * (1.0f - actionBarProgress) * (closedAlpha),
-                    1.0f
-                );
-            } else if (index == 8) {
-                gift.draw(
-                    canvas,
-                    cacx + Math.min(getWidth() * .76f, dp(178)), expandY - dp(21.66f),
-                    scale, 5.0f,
-                    alpha * (1.0f - expandProgress) * (1.0f - actionBarProgress) * (closedAlpha),
-                    1.0f
-                );
+                startX = acx + dp(42) + aw/2;
+                startY = ay + ah - dp(10);
+            } else {
+                continue;
             }
+
+            float progressToCenter = 0f;
+
+            float animationStart = thresholds[i] + animationRange;
+
+            if (avatarExpandProgress > animationStart) {
+                progressToCenter = 0f;
+            } else if (avatarExpandProgress > thresholds[i]) {
+                float animationProgress = 1f - ((avatarExpandProgress - thresholds[i]) / animationRange);
+                progressToCenter = animationProgress;
+            } else {
+                progressToCenter = 1f;
+            }
+
+            float currentX = lerp(startX, acx, progressToCenter);
+            float currentY = lerp(startY, acy, progressToCenter);
+            gift.draw(
+                    canvas,
+                    currentX, currentY,
+                    scale * (1-progressToCenter), 0,
+                    alpha * (1.0f - expandProgress) * (1.0f - actionBarProgress) * closedAlpha * (progressToCenter == 1 ? 0 : 1) ,
+                    1.0f
+            );
         }
 
         canvas.restore();

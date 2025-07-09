@@ -4683,6 +4683,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             protected void dispatchDraw(Canvas canvas) {
 
                 float diff = Math.min(1f, extraHeight / AndroidUtilities.dp(EXTRA_HEIGHT));
+                if (giftsView != null) {
+                    giftsView.setAvatarExpandProgress(diff);
+                }
 
                 final float touchT = this.touchT.set(1);
                 float scale = avatarContainer.getScaleX();
@@ -4841,7 +4844,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         frameLayout.addView(avatarContainer2, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.START, 0, 0, 0, 0));
         avatarContainer.setPivotX(0);
         avatarContainer.setPivotY(0);
-        avatarContainer2.addView(avatarContainer, LayoutHelper.createFrame(42, 42, Gravity.TOP | Gravity.LEFT, AVATAR_LEFT_MARGIN, 0, 0, 0));
         avatarImage = new AvatarImageView(context) {
             @Override
             public void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) {
@@ -4865,6 +4867,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
             }
         };
+        giftsView = new ProfileGiftsView(context, currentAccount, getDialogId(), avatarContainer, avatarImage, resourcesProvider);
+        avatarContainer2.addView(giftsView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        avatarContainer2.addView(avatarContainer, LayoutHelper.createFrame(42, 42, Gravity.TOP | Gravity.LEFT, AVATAR_LEFT_MARGIN, 0, 0, 0));
         avatarImage.getImageReceiver().setAllowDecodeSingleFrame(true);
         avatarImage.setRoundRadius(getSmallAvatarRoundRadius());
         avatarImage.setPivotX(0);
@@ -5159,8 +5164,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             avatarImage.setHasStories(needInsetForStories());
         }
         avatarContainer2.addView(storyView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-        giftsView = new ProfileGiftsView(context, currentAccount, getDialogId(), avatarContainer, avatarImage, resourcesProvider);
-        avatarContainer2.addView(giftsView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+
         updateProfileData(true);
 
         writeButton = new RLottieImageView(context);
@@ -7722,6 +7726,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         float yAdjustmentFixated = AndroidUtilities.dp(7.5f) * (1 - diff);
         avatarY = viewTop * diff - (START_AVATAR_SIZE + 2) * (1-diff) * density;
         avatarScale = (START_AVATAR_SIZE + (END_AVATAR_SIZE - START_AVATAR_SIZE) * diff) / START_AVATAR_SIZE;
+        if (giftsView != null) {
+            giftsView.setAvatarExpandProgress(diff);
+        }
         if (storyView != null) {
             storyView.invalidate();
         }
@@ -8033,7 +8040,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private void needLayout(boolean animated) {
         float diff = Math.min(1f, extraHeight / AndroidUtilities.dp(EXTRA_HEIGHT));
         final int newTop = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight();
-
+        if (giftsView != null) {
+            giftsView.setAvatarExpandProgress(diff);
+        }
         if (viewTop == 0) {
             viewTop = ActionBar.getCurrentActionBarHeight() - dp(START_AVATAR_SIZE) + (Build.VERSION.SDK_INT >= 21 && actionBar.getOccupyStatusBar()  ? AndroidUtilities.statusBarHeight : 0);
         }
