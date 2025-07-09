@@ -92,7 +92,7 @@ public class ProfileButton extends FrameLayout {
         this.icon = icon;
 
         SimpleTextView textView = new SimpleTextView(context);
-        textView.setText(data.getText());
+        textView.setText(data.getTextId() == 0 ? "" : this.getContext().getString(data.getTextId()));
         textView.setTextSize((int) baseTextSize);
         textView.setGravity(Gravity.CENTER_HORIZONTAL);
         textView.setTextColor(Color.WHITE);
@@ -109,7 +109,7 @@ public class ProfileButton extends FrameLayout {
 
     public void updateContent(ButtonData data) {
         icon.setImageResource(data.getImageResId());
-        textView.setText(data.getText());
+        textView.setText(this.getContext().getString(data.getTextId()));
     }
 
 

@@ -785,6 +785,7 @@
     <string name="CantAddBotAsAdmin">Sorry, bots can only be added to channels as administrators.</string>
     <string name="AdminWillBeRemoved">%1$s will be removed from admins if you restrict them.</string>
     <string name="Discussion">Discussion</string>
+    <string name="ProfileButtonDiscuss">Discuss</string>
     <string name="ViewDiscussion">View discussion</string>
     <string name="DiscussionInfo">Add a group chat for comments</string>
     <string name="LinkedChannel">Linked Channel</string>
@@ -9483,4 +9484,19 @@
     <string name="MessageTodoList">Checklist</string>
     <string name="TodoCheck">Check</string>
     <string name="TodoUncheck">Uncheck</string>
+    <string name="ProfileButtonShare">Share</string>
+    <string name="ProfileButtonStop">Stop</string>
+    <string name="ProfileButtonLeave">Leave</string>
+    <string name="ProfileButtonReport">Report</string>
+    <string name="ProfileButtonLiveStream">Live stream</string>
+    <string name="ProfileButtonGift">Gift</string>
+    <string name="ProfileButtonVideo">Video</string>
+    <string name="ProfileButtonCall">Call</string>
+    <string name="ProfileButtonMute">Mute</string>
+    <string name="ProfileButtonUnmute">Unmute</string>
+    <string name="ProfileButtonMessage">Message</string>
+    <string name="ProfileButtonJoin">Join</string>
+    <string name="ProfileButtonAddStory">Add story</string>
+    <string name="ProfileButtonVoiceChat">Voice chat</string>
+
 </resources>

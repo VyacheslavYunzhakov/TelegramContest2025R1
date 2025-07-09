@@ -5694,7 +5694,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         ButtonData newData = new ButtonData(
                                 ButtonType.MUTE,
                                 getDrawableResource(ButtonType.MUTE),
-                                getButtonText(ButtonType.MUTE),
+                                getButtonTextId(ButtonType.MUTE),
                                 v -> muteAction()
                         );
                         muteButton.updateContent(newData);
@@ -5760,7 +5760,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             ButtonData newData = new ButtonData(
                     ButtonType.MUTE,
                     getDrawableResource(ButtonType.MUTE),
-                    getButtonText(ButtonType.MUTE),
+                    getButtonTextId(ButtonType.MUTE),
                     v -> muteAction()
             );
             muteButton.updateContent(newData);
@@ -5946,7 +5946,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 buttons.add(new ButtonData(
                         type,
                         getDrawableResource(type),
-                        getButtonText(type),
+                        getButtonTextId(type),
                         getClickListener(type)
                 ));
             }
@@ -5975,23 +5975,23 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         }
     }
 
-    private String getButtonText(ButtonType type) {
+    private int getButtonTextId(ButtonType type) {
         switch (type) {
-            case VOICE_CHAT: return "Voice Chat";
-            case STORY: return "Stories";
-            case JOIN: return "Join";
-            case MESSAGE: return "Message";
-            case MUTE: return !checkMute() ? "Mute" : "Unmute";
-            case CALL: return "Call";
-            case VIDEO: return "Video";
-            case GIFT: return "Gift";
-            case SHARE: return "Share";
-            case STOP: return "Stop";
-            case LEAVE: return "Leave";
-            case REPORT: return "Report";
-            case DISCUSS: return "Discuss";
-            case LIVE_STREAM: return "Live stream";
-            default: return "";
+            case VOICE_CHAT: return R.string.ProfileButtonVoiceChat;
+            case STORY: return R.string.ProfileButtonAddStory;
+            case JOIN: return R.string.ProfileButtonJoin;
+            case MESSAGE: return R.string.ProfileButtonMessage;
+            case MUTE: return !checkMute() ? R.string.ProfileButtonMute : R.string.ProfileButtonUnmute;
+            case CALL: return R.string.ProfileButtonCall;
+            case VIDEO: return R.string.ProfileButtonVideo;
+            case GIFT: return R.string.ProfileButtonGift;
+            case SHARE: return R.string.ProfileButtonShare;
+            case STOP: return R.string.ProfileButtonStop;
+            case LEAVE: return R.string.ProfileButtonLeave;
+            case REPORT: return R.string.ProfileButtonReport;
+            case DISCUSS: return R.string.ProfileButtonDiscuss;
+            case LIVE_STREAM: return R.string.ProfileButtonLiveStream;
+            default: return 0;
         }
     }
 
