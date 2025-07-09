@@ -14,6 +14,7 @@ public class StarGiftPatterns {
     public static final int TYPE_ACTION = 1;
     public static final int TYPE_GIFT = 2;
     public static final int TYPE_LINK_PREVIEW = 3;
+    public static final int TYPE_PROFILE = 4;
 
     private static final float[][] patternLocations = new float[][] {
         {
@@ -92,6 +93,27 @@ public class StarGiftPatterns {
             -110.33f, 37.66f, 20.66f, .11f,
             -103.166f, -67.5f, 20.33f, .11f,
             -62.66f, -109.66f, 21.33f, .11f
+        },
+        {
+            -95, 5, 25, 0.22f,
+            95, 5, 25, 0.22f,
+            0, -65, 25, 0.22f,
+            0, 75, 25, 0.22f,
+            65f, -35f, 25, 0.22f,
+            -65f, -35f, 25, 0.22f,
+            -65f, 38f, 25, 0.22f,
+            65f, 38f, 25, 0.22f,
+
+            -145, 5, 20, 0.15f,
+            145, 5, 20, 0.15f,
+            107f, -55f, 20, 0.15f,
+            50, -80f, 20, 0.15f,
+            -50, -80f, 20, 0.15f,
+            -107f, -55f, 20, 0.15f,
+            -109f, 62f, 20, 0.15f,
+            -50, 90f, 20, 0.15f,
+            50, 90f, 20, 0.15f,
+            109f, 62f, 20, 0.15f,
         }
     };
 

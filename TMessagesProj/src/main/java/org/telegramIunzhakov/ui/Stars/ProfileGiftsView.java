@@ -358,20 +358,20 @@ public class ProfileGiftsView extends View implements NotificationCenter.Notific
                 startX = acx + dp(70) + aw/2;
                 startY = acy - dp (8);
             } else if (index == 1) {
-                startX = acx - dp(70) - aw/2;
+                startX = acx - dp(67) - aw/2;
                 startY = acy + dp (2);
             } else if (index == 2) {
-                startX = acx + dp(30) + aw/2;
-                startY = ay + dp(2);
+                startX = acx + dp(28) + aw/2;
+                startY = ay + dp(4);
             } else if (index == 3) {
-                startX = acx - dp(40) - aw/2;
-                startY = ay + ah;
-            } else if (index == 4) {
                 startX = acx - dp(30) - aw/2;
-                startY = ay - dp(5);
-            } else if (index == 5) {
-                startX = acx + dp(42) + aw/2;
                 startY = ay + ah - dp(10);
+            } else if (index == 4) {
+                startX = acx - dp(25) - aw/2;
+                startY = ay;
+            } else if (index == 5) {
+                startX = acx + dp(35) + aw/2;
+                startY = ay + ah - dp(20);
             } else {
                 continue;
             }

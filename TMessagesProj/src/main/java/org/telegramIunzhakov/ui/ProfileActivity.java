@@ -1174,8 +1174,25 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     final float full = emojiFullT.set(emojiIsCollectible);
                     if (loadedScale > 0) {
                         canvas.save();
-                        canvas.clipRect(0, 0, getMeasuredWidth(), y1);
-                        StarGiftPatterns.drawProfilePattern(canvas, emoji, getMeasuredWidth(), ((actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + dp(144)) - (1f - extraHeight / dp(EXTRA_HEIGHT)) * dp(50), Math.min(1f, extraHeight / dp(EXTRA_HEIGHT)), full);
+                        canvas.clipRect(0, 0, getMeasuredWidth(), v);
+                        float patternAlpha = loadedScale * full * Math.min(1f, extraHeight / dp(EXTRA_HEIGHT));
+                        float patternScale = Math.min(1.0f,avatarScale); // Масштаб на основе размера аватара
+                        float screenCenterX = AndroidUtilities.isTablet() ? AndroidUtilities.dp(490 / 2f) : displayMetrics.widthPixels / 2f;
+                        float avatarCenterY = avatarContainer.getY() + (avatarContainer.getHeight() * avatarScale) / 2;
+                        canvas.save();
+                        canvas.translate(screenCenterX, avatarCenterY);
+                        canvas.scale(patternScale, patternScale);
+                        int width = (int) (getMeasuredWidth() * (extraHeight/dp(EXTRA_HEIGHT)));
+                        StarGiftPatterns.drawPattern(
+                                canvas,
+                                StarGiftPatterns.TYPE_PROFILE,
+                                emoji,
+                                width,
+                                extraHeight,
+                                1,
+                                patternScale
+                        );
+
                         canvas.restore();
                     }
                 }
@@ -7721,7 +7738,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         if (viewTop == 0) {
             viewTop = ActionBar.getCurrentActionBarHeight() - dp(42) + (Build.VERSION.SDK_INT >= 21 && actionBar.getOccupyStatusBar()  ? AndroidUtilities.statusBarHeight : 0);
         }
-        avatarContainer2.invalidate();;
+        avatarContainer2.invalidate();
         adjustButtonContainer();
         float yAdjustmentFixated = AndroidUtilities.dp(7.5f) * (1 - diff);
         avatarY = viewTop * diff - (START_AVATAR_SIZE + 2) * (1-diff) * density;
