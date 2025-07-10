@@ -837,6 +837,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         private boolean hasStories;
         private float progressToInsets = 1f;
         private boolean avatarHasBlur = false;
+        Bitmap bitmap;
 
         public void setAvatarsViewPager(ProfileGalleryView avatarsViewPager) {
             this.avatarsViewPager = avatarsViewPager;
@@ -936,15 +937,19 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     blurImageReceiver.getBitmap().recycle();
                 }
                 blurImageReceiver.setImageBitmap((Bitmap) null);
+                bitmap = null;
             }
             checkCreateBlurredImageWithScaleFactor(value);
         }
 
+
         private void checkCreateBlurredImageWithScaleFactor(float value) {
-            if (avatarHasBlur && imageReceiver.getBitmap() != null) {
-                Bitmap bitmap = imageReceiver.getBitmap();
-                if (bitmap != null && !bitmap.isRecycled()) {
-                    blurImageReceiver.setImageBitmap(Utilities.stackBlurBitmapWithScaleFactor(bitmap, value));
+            if (bitmap == null) {
+                bitmap = imageReceiver.getBitmap();
+            }
+            if (avatarHasBlur && bitmap != null) {
+                if (!bitmap.isRecycled()) {
+                    blurImageReceiver.setImageBitmap(Utilities.stackBlurBitmapWithMaxScaleFactor(bitmap, value));
                     invalidate();
                 }
             }
@@ -4803,7 +4808,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     darkenProgress = 1f - Math.max(0f, (diff - 0.15f) / (0.6f - 0.15f));
                 }
 
-                // 2. Применение фильтра к аватарке
                 if (avatarImage != null) {
                     ColorFilter darkenFilter = new PorterDuffColorFilter(
                             Color.argb((int) (darkenProgress * 255), 0, 0, 0),
@@ -7858,7 +7862,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             t = Math.max(0, Math.min(1, t));
             float scaleFactor = minScale + t * (maxScale - minScale);
             avatarImage.setHasBlurWithValue(true, scaleFactor);
-            avatarImage.invalidate();
         }
         if (diff > 0.6 && avatarImage.avatarHasBlur) {
             avatarImage.setHasBlurWithValue(false, 1);

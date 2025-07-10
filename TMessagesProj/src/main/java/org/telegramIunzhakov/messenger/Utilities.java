@@ -108,6 +108,19 @@ public class Utilities {
         return scaledBitmap;
     }
 
+    public static Bitmap stackBlurBitmapWithMaxScaleFactor(Bitmap bitmap, float scaleFactor) {
+        int w = (int) Math.max(AndroidUtilities.dp(20), Math.min(AndroidUtilities.dp(100),bitmap.getWidth() / scaleFactor));
+        int h = (int) Math.max(AndroidUtilities.dp(20) * (float) bitmap.getHeight() / bitmap.getWidth(), Math.min(AndroidUtilities.dp(100),bitmap.getWidth() / scaleFactor));
+        Bitmap scaledBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(scaledBitmap);
+        canvas.save();
+        canvas.scale((float) scaledBitmap.getWidth() / bitmap.getWidth(), (float) scaledBitmap.getHeight() / bitmap.getHeight());
+        canvas.drawBitmap(bitmap, 0, 0, null);
+        canvas.restore();
+        Utilities.stackBlurBitmap(scaledBitmap, Math.max(10, Math.max(w, h) / 150));
+        return scaledBitmap;
+    }
+
     public static Bitmap stackBlurBitmapWithScaleFactor(Bitmap bitmap, float scaleFactor) {
         int w = (int) Math.max(AndroidUtilities.dp(20), bitmap.getWidth() / scaleFactor);
         int h = (int) Math.max(AndroidUtilities.dp(20) * (float) bitmap.getHeight() / bitmap.getWidth(), bitmap.getHeight() / scaleFactor);
