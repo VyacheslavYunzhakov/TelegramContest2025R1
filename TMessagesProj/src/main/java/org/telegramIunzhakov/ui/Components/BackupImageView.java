@@ -350,6 +350,12 @@ public class BackupImageView extends View {
         imageReceiver.setColorFilter(colorFilter);
     }
 
+    public void setColorFilterForBlurred(ColorFilter colorFilter) {
+        if (blurImageReceiver != null) {
+            blurImageReceiver.setColorFilter(colorFilter);
+        }
+    }
+
     public void setAnimatedEmojiDrawable(AnimatedEmojiDrawable animatedEmojiDrawable) {
         if (this.animatedEmojiDrawable == animatedEmojiDrawable) {
             return;

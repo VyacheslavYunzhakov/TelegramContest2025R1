@@ -4798,6 +4798,24 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
                 float alpha = 1;
 
+                float darkenProgress = 0f;
+                if (diff <= 0.6f) {
+                    darkenProgress = 1f - Math.max(0f, (diff - 0.15f) / (0.6f - 0.15f));
+                }
+
+                // 2. Применение фильтра к аватарке
+                if (avatarImage != null) {
+                    ColorFilter darkenFilter = new PorterDuffColorFilter(
+                            Color.argb((int) (darkenProgress * 255), 0, 0, 0),
+                            PorterDuff.Mode.SRC_ATOP
+                    );
+                    avatarImage.setColorFilterForBlurred(darkenFilter);
+                }
+
+                if (diff > 0.6f && avatarImage != null) {
+                    avatarImage.setColorFilterForBlurred(null);
+                }
+
                 if (diff <= 0.6 && (expandAnimator == null || !expandAnimator.isRunning()) && !openAnimationInProgress) {
                     metaballsPath.rewind();
                     metaballsPath.moveTo(p1.x, p1.y);
