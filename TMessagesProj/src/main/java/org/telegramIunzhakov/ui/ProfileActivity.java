@@ -836,6 +836,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         ProfileGalleryView avatarsViewPager;
         private boolean hasStories;
         private float progressToInsets = 1f;
+        private boolean avatarHasBlur = false;
 
         public void setAvatarsViewPager(ProfileGalleryView avatarsViewPager) {
             this.avatarsViewPager = avatarsViewPager;
@@ -925,6 +926,30 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             foregroundImageReceiver.onAttachedToWindow();
         }
 
+        public void setHasBlurWithValue(boolean hasBlur, float value) {
+            if (hasBlur && !blurAllowed) {
+                throw new IllegalStateException("You should call setBlurAllowed(...) before calling setHasBlur(true)!");
+            }
+            this.avatarHasBlur = hasBlur;
+            if (!hasBlur) {
+                if (blurImageReceiver.getBitmap() != null && !blurImageReceiver.getBitmap().isRecycled()) {
+                    blurImageReceiver.getBitmap().recycle();
+                }
+                blurImageReceiver.setImageBitmap((Bitmap) null);
+            }
+            checkCreateBlurredImageWithScaleFactor(value);
+        }
+
+        private void checkCreateBlurredImageWithScaleFactor(float value) {
+            if (avatarHasBlur && imageReceiver.getBitmap() != null) {
+                Bitmap bitmap = imageReceiver.getBitmap();
+                if (bitmap != null && !bitmap.isRecycled()) {
+                    blurImageReceiver.setImageBitmap(Utilities.stackBlurBitmapWithScaleFactor(bitmap, value));
+                    invalidate();
+                }
+            }
+        }
+
         @Override
         public void setRoundRadius(int value) {
             super.setRoundRadius(value);
@@ -961,7 +986,20 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 final float wasAlpha = imageReceiver.getAlpha();
                 imageReceiver.setAlpha(wasAlpha * alpha);
                 if (drawAvatar) {
-                    imageReceiver.draw(canvas);
+                    if (blurAllowed && avatarHasBlur) {
+                        blurImageReceiver.setImageCoords(inset, inset, getMeasuredWidth() - inset * 2f, getMeasuredHeight() - inset * 2f);
+                        int[] radii = imageReceiver.getRoundRadius();
+                        if (radii != null) {
+                            if (radii.length == 1) {
+                                blurImageReceiver.setRoundRadius(radii[0]);
+                            } else if (radii.length == 4) {
+                                blurImageReceiver.setRoundRadius(radii[0], radii[1], radii[2], radii[3]);
+                            }
+                        }
+                        blurImageReceiver.draw(canvas);
+                    } else {
+                        imageReceiver.draw(canvas);
+                    }
                 }
                 imageReceiver.setAlpha(wasAlpha);
             }
@@ -4760,7 +4798,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
                 float alpha = 1;
 
-                if (diff < 0.6 && (expandAnimator == null || !expandAnimator.isRunning()) && !openAnimationInProgress) {
+                if (diff <= 0.6 && (expandAnimator == null || !expandAnimator.isRunning()) && !openAnimationInProgress) {
                     metaballsPath.rewind();
                     metaballsPath.moveTo(p1.x, p1.y);
                     metaballsPath.cubicTo(h1.x, h1.y, h3.x, h3.y, p3.x, p3.y);
@@ -4863,6 +4901,13 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         avatarContainer.setPivotX(0);
         avatarContainer.setPivotY(0);
         avatarImage = new AvatarImageView(context) {
+
+            @Override
+            protected void onAttachedToWindow() {
+                setBlurAllowed(true);
+                super.onAttachedToWindow();
+            }
+
             @Override
             public void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) {
                 super.onInitializeAccessibilityNodeInfo(info);
@@ -6254,6 +6299,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private void setAvatarExpandProgress(float animatedFracture) {
         final int newTop = ActionBar.getCurrentActionBarHeight() + (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
         final float value = currentExpandAnimatorValue = AndroidUtilities.lerp(expandAnimatorValues, currentExpanAnimatorFracture = animatedFracture);
+        if (avatarImage!= null && avatarImage.avatarHasBlur) {
+            avatarImage.setHasBlurWithValue(false, 1);
+        }
         checkPhotoDescriptionAlpha();
         avatarContainer.setScaleX(avatarScale);
         avatarContainer.setScaleY(avatarScale);
@@ -7757,6 +7805,19 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         float screenCenterX = AndroidUtilities.isTablet() ? AndroidUtilities.dp(490 / 2f) : displayMetrics.widthPixels / 2f;
         float avatarWidth = START_AVATAR_SIZE * density * avatarScale;
         float targetTranslation = screenCenterX - avatarWidth / 2f - AVATAR_LEFT_MARGIN * density;
+        if (diff <= 0.6) {
+            float minScale = 0.1f;
+            float maxScale = 3f;
+            float t = 1.0f - (diff / 0.6f);
+            t = Math.max(0, Math.min(1, t));
+            float scaleFactor = minScale + t * (maxScale - minScale);
+            avatarImage.setHasBlurWithValue(true, scaleFactor);
+            avatarImage.invalidate();
+        }
+        if (diff > 0.6 && avatarImage.avatarHasBlur) {
+            avatarImage.setHasBlurWithValue(false, 1);
+            avatarImage.invalidate();
+        }
 
         avatarX = targetTranslation;
         if (expandAnimator == null || !expandAnimator.isRunning()) {
@@ -7816,7 +7877,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         final int newTop = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight();
         expandProgress = Math.max(0f, Math.min(1f, (h - AndroidUtilities.dp(EXTRA_HEIGHT)) / (listView.getMeasuredWidth() - newTop - AndroidUtilities.dp(EXTRA_HEIGHT))));
         avatarScale = AndroidUtilities.lerp((END_AVATAR_SIZE) / START_AVATAR_SIZE, (END_AVATAR_SIZE + AVATAR_ENLARGE_SIZE) / START_AVATAR_SIZE, Math.min(1f, expandProgress * 5f));
-
+        if (avatarImage!= null && avatarImage.avatarHasBlur) {
+            avatarImage.setHasBlurWithValue(false, 1);
+        }
         final float durationFactor = Math.min(AndroidUtilities.dpf2(2000f), Math.max(AndroidUtilities.dpf2(1100f), Math.abs(listViewVelocityY))) / AndroidUtilities.dpf2(1100f);
         adjustButtonContainer();
         if (allowPullingDown && (openingAvatar || expandProgress >= 0.20f)) {
@@ -8057,6 +8120,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     float nameScale = 1f;
 
     private void needLayout(boolean animated) {
+        if (avatarImage!= null && avatarImage.avatarHasBlur) {
+            avatarImage.setHasBlurWithValue(false, 1);
+        }
         float diff = Math.min(1f, extraHeight / AndroidUtilities.dp(EXTRA_HEIGHT));
         final int newTop = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight();
         if (giftsView != null) {
