@@ -1276,6 +1276,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
         private final GradientDrawable topOverlayGradient;
         private final GradientDrawable bottomOverlayGradient;
+        private final GradientDrawable backgroundOverlayGradient;
         private final ValueAnimator animator;
         private final float[] animatorValues = new float[]{0f, 1f};
         private final Paint topBackgroundPaint;
@@ -1311,11 +1312,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
             topOverlayGradient = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{0x42000000, 0});
             topOverlayGradient.setShape(GradientDrawable.RECTANGLE);
-
+            backgroundOverlayGradient   = new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, new int[]{0x42000000, 0});
             if(isSettings()) {
                 bottomOverlayGradient = new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, new int[]{0x42000000, 0});
             } else {
-                bottomOverlayGradient = new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, new int[]{0xE6FFFFFF, 0x33FFFFFF, 0});
+                bottomOverlayGradient = new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, new int[]{0x80FFFFFF, 0x33FFFFFF, 0});
             }
             bottomOverlayGradient.setShape(GradientDrawable.RECTANGLE);
 
@@ -1334,7 +1335,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 bottomBackgroundPaint.setAlpha(66);
             } else {
                 bottomBackgroundPaint.setColor(Color.WHITE);
-                bottomBackgroundPaint.setAlpha(204);
+                bottomBackgroundPaint.setAlpha(128);
             }
             animator = ValueAnimator.ofFloat(0f, 1f);
             animator.setDuration(250);
@@ -1374,7 +1375,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (isSettings()) {
                     bottomBackgroundPaint.setAlpha((int) (66 * value));
                 } else {
-                    bottomBackgroundPaint.setAlpha((int) (230 * value));
+                    bottomBackgroundPaint.setAlpha((int) (128 * value));
                 }
                 barPaint.setAlpha((int) (0x55 * value));
                 selectedBarPaint.setAlpha(alpha);
@@ -1421,6 +1422,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             bottomOverlayRect.set(0, (int) (h - AndroidUtilities.dp(BUTTONS_CONTAINER_SIZE)), w, h);
             topOverlayGradient.setBounds(0, topOverlayRect.bottom, w, actionBarHeight + AndroidUtilities.dp(16f));
             bottomOverlayGradient.setBounds(0, h - AndroidUtilities.dp(BUTTONS_CONTAINER_SIZE) - AndroidUtilities.dp(24f), w, bottomOverlayRect.top);
+            backgroundOverlayGradient.setBounds(0, h - AndroidUtilities.dp(BUTTONS_CONTAINER_SIZE) - AndroidUtilities.dp(24f) - AndroidUtilities.dp(72f), w,  bottomOverlayRect.top);
             pressedOverlayGradient[0].setBounds(0, 0, w / 5, h);
             pressedOverlayGradient[1].setBounds(w - (w / 5), 0, w, h);
         }
@@ -1436,8 +1438,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
             topOverlayGradient.draw(canvas);
             bottomOverlayGradient.draw(canvas);
+            backgroundOverlayGradient.draw(canvas);
             canvas.drawRect(topOverlayRect, topBackgroundPaint);
             canvas.drawRect(bottomOverlayRect, bottomBackgroundPaint);
+            canvas.drawRect(bottomOverlayRect, topBackgroundPaint);
+
 
             int count = avatarsViewPager.getRealCount();
             selectedPosition = avatarsViewPager.getRealPosition();
