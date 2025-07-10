@@ -1371,6 +1371,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 int alpha = (int) (255 * value);
                 topOverlayGradient.setAlpha(alpha);
                 bottomOverlayGradient.setAlpha(alpha);
+                backgroundOverlayGradient.setAlpha(alpha);
                 topBackgroundPaint.setAlpha((int) (66 * value));
                 if (isSettings()) {
                     bottomBackgroundPaint.setAlpha((int) (66 * value));
@@ -7841,7 +7842,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         float diff = Math.min(1f, extraHeight / AndroidUtilities.dp(EXTRA_HEIGHT));
         viewTop = ActionBar.getCurrentActionBarHeight() - dp(42) + (Build.VERSION.SDK_INT >= 21 && actionBar.getOccupyStatusBar()  ? AndroidUtilities.statusBarHeight : 0);
         avatarContainer2.invalidate();
-        adjustButtonContainer();
         float yAdjustmentFixated = AndroidUtilities.dp(7.5f) * (1 - diff);
         avatarY = viewTop * diff - (START_AVATAR_SIZE + 2) * (1-diff) * density;
         avatarScale = (START_AVATAR_SIZE + (END_AVATAR_SIZE - START_AVATAR_SIZE) * diff) / START_AVATAR_SIZE;
@@ -7916,6 +7916,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
         updateCollectibleHint();
         adjustWriteButton(false);
+        adjustButtonContainer();
     }
 
     float centerAvatarY = 0f;
@@ -8452,15 +8453,14 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         if (buttonsContainer != null) {
             FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) buttonsContainer.getLayoutParams();
 
-//            SimpleTextView onlineTV = onlineTextView[1];
-//            for (int a = 0; a < onlineTextView.length; a++) {
-//                if (onlineTextView[a].isShown()){
-//                    onlineTV = onlineTextView[a];
-//                }
-//            }
-//            float onlineBottom = onlineTV.getBottom() + onlineTV.getTranslationY();
-            float onlineBottom = onlineY + dp(14) * nameScale;
-            float availableSpace = (newTop + extraHeight) - onlineBottom + dp(4);
+            SimpleTextView onlineTV = onlineTextView[0];
+            for (int a = 0; a < onlineTextView.length; a++) {
+                if (onlineTextView[a].isShown()){
+                    onlineTV = onlineTextView[a];
+                }
+            }
+            float onlineBottom = onlineTV.getBottom() + onlineTV.getTranslationY() + dp(4);
+            float availableSpace = (newTop + extraHeight) - onlineBottom;
             float targetHeight;
             if (availableSpace < 0) {
                 targetHeight = 0;
