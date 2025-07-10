@@ -4760,7 +4760,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
                 float alpha = 1;
 
-                if (diff < 0.6 && (expandAnimator == null || !expandAnimator.isRunning())) {
+                if (diff < 0.6 && (expandAnimator == null || !expandAnimator.isRunning()) && !openAnimationInProgress) {
                     metaballsPath.rewind();
                     metaballsPath.moveTo(p1.x, p1.y);
                     metaballsPath.cubicTo(h1.x, h1.y, h3.x, h3.y, p3.x, p3.y);
