@@ -4816,6 +4816,34 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     avatarImage.setColorFilterForBlurred(null);
                 }
 
+                if (diff <= 0.7f && diff >= 0.6f) {
+                    float bumpProgress = (0.7f - diff) / 0.1f;
+                    bumpProgress = MathUtils.clamp(bumpProgress, 0f, 1f);
+                    float R = avatarR * bumpProgress / 2;
+                    float H = R * 0.8f;
+
+                    float cx = avatarCx;
+                    float y0 = 0;
+                    float ctrl = R * 0.9f;
+
+                    Path hill = new Path();
+                    hill.moveTo(cx - R, y0);
+                    hill.cubicTo(
+                            cx - ctrl, y0,
+                            cx - R/2,   y0 + H,
+                            cx,         y0 + H
+                    );
+                    hill.cubicTo(
+                            cx + R/2,   y0 + H,
+                            cx + ctrl,  y0,
+                            cx + R,     y0
+                    );
+                    hill.close();
+
+                    mainPaint.setAlpha((int)(0xFF * alpha));
+                    canvas.drawPath(hill, mainPaint);
+                }
+
                 if (diff <= 0.6 && (expandAnimator == null || !expandAnimator.isRunning()) && !openAnimationInProgress) {
                     metaballsPath.rewind();
                     metaballsPath.moveTo(p1.x, p1.y);
