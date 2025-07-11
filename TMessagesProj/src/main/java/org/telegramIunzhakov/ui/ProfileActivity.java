@@ -1220,7 +1220,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         canvas.save();
                         canvas.clipRect(0, 0, getMeasuredWidth(), v);
                         float patternAlpha = loadedScale * full * Math.min(1f, extraHeight / dp(EXTRA_HEIGHT));
-                        float patternScale = Math.min(1.0f,avatarScale); // Масштаб на основе размера аватара
+                        float patternScale = Math.min(1.0f,avatarScale);
                         float screenCenterX = AndroidUtilities.isTablet() ? AndroidUtilities.dp(490 / 2f) : displayMetrics.widthPixels / 2f;
                         float avatarCenterY = avatarContainer.getY() + (avatarContainer.getHeight() * avatarScale) / 2;
                         canvas.save();
@@ -7886,7 +7886,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             starFgItem.setTranslationY(avatarContainer.getY() + AndroidUtilities.dp(24) + extra);
         }
         float leftOffset = AndroidUtilities.dp(START_AVATAR_SIZE) * (1 - diff);
-        nameY = viewTop + (avatarWidth + dp(7f)) * diff - yAdjustmentFixated - nameTextView[1].getTop();
+        nameTextView[1].setPivotY(0);
+        nameY = viewTop + (avatarWidth + dp(7f)) * diff - yAdjustmentFixated;
         onlineY = nameY + AndroidUtilities.dp(24) * nameScale;
             if (showStatusButton != null) {
                 showStatusButton.setAlpha((int) (0xFF * diff));
