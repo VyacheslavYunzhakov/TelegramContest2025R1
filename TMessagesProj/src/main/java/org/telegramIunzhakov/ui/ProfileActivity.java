@@ -7935,7 +7935,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             avatarImage.setHasBlurWithValue(false, 1);
         }
         final float durationFactor = Math.min(AndroidUtilities.dpf2(2000f), Math.max(AndroidUtilities.dpf2(1100f), Math.abs(listViewVelocityY))) / AndroidUtilities.dpf2(1100f);
-        adjustButtonContainer();
         if (allowPullingDown && (openingAvatar || expandProgress >= 0.20f)) {
             if (!isPulledDown) {
                 if (otherItem != null) {
@@ -8072,27 +8071,25 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             avatarContainer.setTranslationX(avatarX);
             avatarContainer.setTranslationY(avatarY);
 
-            if (expandAnimator == null || !expandAnimator.isRunning()) {
-                float yTranslation = AndroidUtilities.dp(10)*factor + AVATAR_ENLARGE_SIZE * factor;
-                for (int a = 0; a < nameTextView.length; a++) {
-                    if (nameTextView[a] == null) {
-                        continue;
-                    }
-                    float nameWidth = Math.min(nameTextView[a].getTextWidth(), nameTextView[a].getMaxTextWidth())
-                            + nameTextView[a].getRightDrawableWidth();
-                    nameX = screenCenterX - (nameWidth * nameScale) / 2f - TEXTS_LEFT_MARGIN * density;
-                    nameY = viewTop + (END_AVATAR_SIZE + 7f) * AndroidUtilities.density + yTranslation;
-                    onlineX = screenCenterX - onlineTextView[a].getTextWidth() / 2f - TEXTS_LEFT_MARGIN* density;
-                    onlineY = nameY + AndroidUtilities.dp(24) * nameScale;
-                    nameTextView[a].setTranslationX(nameX);
-                    nameTextView[a].setTranslationY(nameY);
-                    onlineTextView[a].setTranslationX(onlineX);
-                    onlineTextView[a].setTranslationY(onlineY);
-                    mediaCounterTextView.setTranslationX(onlineX);
-                    mediaCounterTextView.setTranslationY(onlineY);
+            float yTranslation = AndroidUtilities.dp(20)*factor + AVATAR_ENLARGE_SIZE * factor;
+            for (int a = 0; a < nameTextView.length; a++) {
+                if (nameTextView[a] == null) {
+                    continue;
                 }
-                updateCollectibleHint();
+                float nameWidth = Math.min(nameTextView[a].getTextWidth(), nameTextView[a].getMaxTextWidth())
+                        + nameTextView[a].getRightDrawableWidth();
+                nameX = screenCenterX - (nameWidth * nameScale) / 2f - TEXTS_LEFT_MARGIN * density;
+                nameY = viewTop + (END_AVATAR_SIZE + 7f) * AndroidUtilities.density + yTranslation;
+                onlineX = screenCenterX - onlineTextView[a].getTextWidth() / 2f - TEXTS_LEFT_MARGIN* density;
+                onlineY = nameY + AndroidUtilities.dp(24) * nameScale;
+                nameTextView[a].setTranslationX(nameX);
+                nameTextView[a].setTranslationY(nameY);
+                onlineTextView[a].setTranslationX(onlineX);
+                onlineTextView[a].setTranslationY(onlineY);
+                mediaCounterTextView.setTranslationX(onlineX);
+                mediaCounterTextView.setTranslationY(onlineY);
             }
+            updateCollectibleHint();
         }
         if (isPulledDown || (overlaysView != null && overlaysView.animator != null && overlaysView.animator.isRunning())) {
             final ViewGroup.LayoutParams overlaysLp = overlaysView.getLayoutParams();
@@ -8101,6 +8098,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             overlaysView.requestLayout();
         }
         adjustWriteButton(false);
+        adjustButtonContainer();
     }
 
     public void updateSelectedMediaTabText() {
