@@ -159,7 +159,6 @@ import org.telegramIunzhakov.messenger.R;
 import org.telegramIunzhakov.messenger.SendMessagesHelper;
 import org.telegramIunzhakov.messenger.SharedConfig;
 import org.telegramIunzhakov.messenger.SvgHelper;
-import org.telegramIunzhakov.messenger.TranslateController;
 import org.telegramIunzhakov.messenger.UserConfig;
 import org.telegramIunzhakov.messenger.UserObject;
 import org.telegramIunzhakov.messenger.Utilities;
@@ -10667,7 +10666,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         (getContactsController().contactsDict.size() != 0 || !getContactsController().isLoadingContacts())) {
                     nameTextView[a].setText(PhoneFormat.getInstance().format("+" + user.phone));
                 } else {
-                    nameTextView[a].setText(newString);
+                    setNameTextWithPositioning(a,newString);
                 }
                 if (a == 0 && onlineTextOverride != null) {
                     onlineTextView[a].setText(onlineTextOverride);
@@ -10681,7 +10680,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         onlineTextView[a].setText(textView.getText());
                     }
                 } else {
-                    setTextWithPositioning(a, newString2);
+                    setOnlineTextWithPositioning(a, newString2);
                 }
                 onlineTextView[a].setDrawablePadding(dp(9));
                 onlineTextView[a].setRightDrawableInside(true);
@@ -11160,7 +11159,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         AndroidUtilities.runOnUIThread(this::updateEmojiStatusEffectPosition);
     }
 
-    private void setTextWithPositioning(int a, String text) {
+    private void setOnlineTextWithPositioning(int a, String text) {
         float screenCenterX = AndroidUtilities.isTablet() ? AndroidUtilities.dp(490/2f) : displayMetrics.widthPixels / 2f;
         float diff = Math.min(1f, extraHeight / AndroidUtilities.dp(EXTRA_HEIGHT));
         float leftOffset = AndroidUtilities.dp(START_AVATAR_SIZE) * (1 - Math.min(1,diff));
@@ -11170,6 +11169,21 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             onlineTextView[a].setTranslationX(onlineX);
         } else {
             onlineTextView[a].setText(text);
+        }
+    }
+
+    private void setNameTextWithPositioning(int a, CharSequence text) {
+        float screenCenterX = AndroidUtilities.isTablet() ? AndroidUtilities.dp(490/2f) : displayMetrics.widthPixels / 2f;
+        float diff = Math.min(1f, extraHeight / AndroidUtilities.dp(EXTRA_HEIGHT));
+        float leftOffset = AndroidUtilities.dp(START_AVATAR_SIZE) * (1 - Math.min(1,diff));
+        if (!isPulledDown) {
+            nameTextView[a].setText(text);
+            float nameWidth = Math.min(nameTextView[a].getTextWidth(), nameTextView[a].getMaxTextWidth())
+                    + nameTextView[a].getRightDrawableWidth();
+            nameX = (screenCenterX - (nameWidth * nameScale) / 2f - TEXTS_LEFT_MARGIN * density) * diff - leftOffset;
+            nameTextView[a].setTranslationX(nameX);
+        } else {
+            nameTextView[a].setText(text);
         }
     }
 
