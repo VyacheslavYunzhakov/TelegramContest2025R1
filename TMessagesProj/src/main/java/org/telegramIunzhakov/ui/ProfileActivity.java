@@ -7886,13 +7886,13 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             starFgItem.setTranslationY(avatarContainer.getY() + AndroidUtilities.dp(24) + extra);
         }
         float leftOffset = AndroidUtilities.dp(START_AVATAR_SIZE) * (1 - diff);
-        nameY = viewTop + (avatarWidth + dp(7f)) * diff - yAdjustmentFixated;
+        nameY = viewTop + (avatarWidth + dp(7f)) * diff - yAdjustmentFixated - nameTextView[1].getTop();
         onlineY = nameY + AndroidUtilities.dp(24) * nameScale;
             if (showStatusButton != null) {
                 showStatusButton.setAlpha((int) (0xFF * diff));
             }
             for (int a = 0; a < nameTextView.length; a++) {
-                onlineX = (screenCenterX - onlineTextView[a].getTextWidth() / 2f - (TEXTS_LEFT_MARGIN - (a == 1 || a == 2 || a == 3 ? 4 : 0)) * density) * diff - leftOffset;
+                onlineX = (screenCenterX - onlineTextView[a].getTextWidth() / 2f - TEXTS_LEFT_MARGIN * density) * diff - leftOffset;
                 if (nameTextView[a] == null) {
                     continue;
                 }
@@ -8082,7 +8082,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             + nameTextView[a].getRightDrawableWidth();
                     nameX = screenCenterX - (nameWidth * nameScale) / 2f - TEXTS_LEFT_MARGIN * density;
                     nameY = viewTop + (END_AVATAR_SIZE + 7f) * AndroidUtilities.density + yTranslation;
-                    onlineX = screenCenterX - onlineTextView[a].getTextWidth() / 2f - (TEXTS_LEFT_MARGIN - (a == 1 || a == 2 || a == 3 ? 4 : 0)) * density;
+                    onlineX = screenCenterX - onlineTextView[a].getTextWidth() / 2f - TEXTS_LEFT_MARGIN* density;
                     onlineY = nameY + AndroidUtilities.dp(24) * nameScale;
                     nameTextView[a].setTranslationX(nameX);
                     nameTextView[a].setTranslationY(nameY);
@@ -8324,7 +8324,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     showStatusButton.setAlpha((int) (0xFF * diff));
                 }
                 for (int a = 0; a < nameTextView.length; a++) {
-                        onlineX = (screenCenterX - onlineTextView[a].getTextWidth() / 2f - (TEXTS_LEFT_MARGIN - (a == 1 || a == 2 || a == 3 ? 4 : 0)) * density) * diff;
+                        onlineX = (screenCenterX - onlineTextView[a].getTextWidth() / 2f - TEXTS_LEFT_MARGIN * density) * diff;
                     if (nameTextView[a] == null) {
                         continue;
                     }
@@ -8552,13 +8552,15 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void refreshNameAndOnlineXY() {
-//        float screenCenter = dm.widthPixels * 0.5f/AndroidUtilities.density;
-//        float avatarCurrentWidth = avatarContainer.getWidth() * avatarScale/AndroidUtilities.density;
-//        float factor =  Math.min(expandProgress / 0.2f, 1f);
-//        nameX = avatarX - (nameTextView[1].totalWidth * nameScale)/ 2f ;
-//        nameY = viewTop + avatarCurrentWidth + AndroidUtilities.dp(20 * factor);
-//        onlineX = avatarX - onlineTextView[1].totalWidth/2f;
-//        onlineY = viewTop + avatarCurrentWidth + AndroidUtilities.dp(26) + AndroidUtilities.dp(20 * factor);
+//        float screenCenterX = AndroidUtilities.isTablet() ? AndroidUtilities.dp(490 / 2f) : displayMetrics.widthPixels / 2f;
+//        float factor = Math.min(expandProgress / 0.2f, 1f);
+//        float yTranslation = AndroidUtilities.dp(10)*factor + AVATAR_ENLARGE_SIZE * factor;
+//        float nameWidth = Math.min(nameTextView[1].getTextWidth(), nameTextView[1].getMaxTextWidth())
+//                + nameTextView[1].getRightDrawableWidth();
+//        nameX = screenCenterX - (nameWidth * nameScale) / 2f - TEXTS_LEFT_MARGIN * density;
+//        nameY = viewTop + (END_AVATAR_SIZE + 7f) * AndroidUtilities.density + yTranslation;
+//        onlineX = screenCenterX - onlineTextView[1].getTextWidth() / 2f - TEXTS_LEFT_MARGIN* density;
+//        onlineY = nameY + AndroidUtilities.dp(24) * nameScale;
     }
 
     public RecyclerListView getListView() {
@@ -11159,10 +11161,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
     private void setTextWithPositioning(int a, String text) {
         float screenCenterX = AndroidUtilities.isTablet() ? AndroidUtilities.dp(490/2f) : displayMetrics.widthPixels / 2f;
-        float v = TEXTS_LEFT_MARGIN - (a == 1 || a == 2 || a == 3 ? 4 : 0);
-        if (onlineX == (screenCenterX - onlineTextView[a].getTextWidth() / 2f - v * density)){
+        float diff = Math.min(1f, extraHeight / AndroidUtilities.dp(EXTRA_HEIGHT));
+        float leftOffset = AndroidUtilities.dp(START_AVATAR_SIZE) * (1 - Math.min(1,diff));
+        if (!isPulledDown) {
             onlineTextView[a].setText(text);
-            onlineX = (screenCenterX - onlineTextView[a].getTextWidth() / 2f - v * density);
+            onlineX = (screenCenterX - onlineTextView[a].getTextWidth() / 2f - TEXTS_LEFT_MARGIN * density) * diff - leftOffset;
             onlineTextView[a].setTranslationX(onlineX);
         } else {
             onlineTextView[a].setText(text);
