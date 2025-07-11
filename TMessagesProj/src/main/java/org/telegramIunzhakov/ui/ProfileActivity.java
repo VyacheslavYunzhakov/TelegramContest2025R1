@@ -4826,7 +4826,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     avatarImage.setColorFilterForBlurred(null);
                 }
 
-                if (diff <= 0.7f && diff >= 0.6f && (expandAnimator == null || !expandAnimator.isRunning()) && (!openAnimationInProgress && playProfileAnimation == 0)) {
+                if (diff <= 0.7f && diff >= 0.6f && (expandAnimator == null || !expandAnimator.isRunning()) && !openAnimationInProgress) {
                     float bumpProgress = (0.7f - diff) / 0.1f;
                     bumpProgress = MathUtils.clamp(bumpProgress, 0f, 1f);
                     float R = avatarR * bumpProgress / 2;
@@ -8073,7 +8073,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             avatarContainer.setTranslationY(avatarY);
 
             if (expandAnimator == null || !expandAnimator.isRunning()) {
-                float yTranslation = AndroidUtilities.dp(20)*factor + AVATAR_ENLARGE_SIZE * factor;
+                float yTranslation = AndroidUtilities.dp(10)*factor + AVATAR_ENLARGE_SIZE * factor;
                 for (int a = 0; a < nameTextView.length; a++) {
                     if (nameTextView[a] == null) {
                         continue;
@@ -8318,7 +8318,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     starFgItem.setTranslationY(avatarContainer.getY() + AndroidUtilities.dp(24) + extra);
                 }
 
-                nameY = viewTop + ((END_AVATAR_SIZE + 7f) * AndroidUtilities.density) * diff - yAdjustmentFixated;
+                nameY = viewTop + ((END_AVATAR_SIZE + 7f) * AndroidUtilities.density) * diff - yAdjustmentFixated + dp(1)*(1-diff);
                 onlineY = nameY + AndroidUtilities.dp(24) * nameScale;
                 if (showStatusButton != null) {
                     showStatusButton.setAlpha((int) (0xFF * diff));
@@ -8630,10 +8630,14 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (fragmentView != null) {
                     checkListViewScroll();
                     float diff = Math.min(1f, extraHeight / AndroidUtilities.dp(EXTRA_HEIGHT));
-                    if (diff >= 1) {
-                        expandAvatarToViewPager();
+                    if (openAnimationInProgress) {
+                        needLayout(true);
                     } else {
-                        avatarAnimationFromTopToCenter();
+                        if (diff >= 1) {
+                            expandAvatarToViewPager();
+                        } else {
+                            avatarAnimationFromTopToCenter();
+                        }
                     }
                     fragmentView.getViewTreeObserver().removeOnPreDrawListener(this);
                 }
