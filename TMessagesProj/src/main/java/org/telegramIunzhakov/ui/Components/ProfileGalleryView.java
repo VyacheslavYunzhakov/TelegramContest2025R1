@@ -1083,7 +1083,7 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
     public class ViewPagerAdapter extends Adapter {
 
         private final ArrayList<Item> objects = new ArrayList<>();
-        private final ArrayList<BackupImageView> imageViews = new ArrayList<>();
+        private final ArrayList<AvatarImageView> imageViews = new ArrayList<>();
 
         private final Context context;
         private final Paint placeholderPaint;
@@ -1362,7 +1362,7 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
         this.createThumbFromParent = createThumbFromParent;
     }
 
-    private class AvatarImageView extends BackupImageView {
+    public class AvatarImageView extends BackupImageView {
 
         private final int radialProgressSize = AndroidUtilities.dp(64f);
 
@@ -1389,6 +1389,13 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
                 int paddingBottom = AndroidUtilities.dp2(80f);
                 radialProgress.setProgressRect((w - radialProgressSize) / 2, paddingTop + (h - paddingTop - paddingBottom - radialProgressSize) / 2, (w + radialProgressSize) / 2, paddingTop + (h - paddingTop - paddingBottom + radialProgressSize) / 2);
             }
+        }
+
+        @Override
+        protected void onAttachedToWindow() {
+            setParticularBlurAllowed(true);
+            setHasParticularBlur(true);
+            super.onAttachedToWindow();
         }
 
         @Override

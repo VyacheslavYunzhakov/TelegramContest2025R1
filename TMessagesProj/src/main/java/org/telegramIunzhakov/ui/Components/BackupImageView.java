@@ -14,12 +14,17 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
+import android.graphics.LinearGradient;
+import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
+import android.graphics.PorterDuffXfermode;
+import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
@@ -38,6 +43,7 @@ public class BackupImageView extends View {
 
     protected ImageReceiver imageReceiver;
     protected ImageReceiver blurImageReceiver;
+    protected ImageReceiver particularBlurImageReceiver;
     protected int width = -1;
     protected int height = -1;
     public AnimatedEmojiDrawable animatedEmojiDrawable;
@@ -46,8 +52,14 @@ public class BackupImageView extends View {
     boolean attached;
 
     protected boolean hasBlur;
+    protected boolean hasParticularBlur;
     protected boolean blurAllowed;
+    protected boolean particularBlurAllowed;
     public boolean drawFromStart;
+
+    private LinearGradient gradientCache;
+    private Paint gradientPaint;
+    private float lastBlurHeight = -1;
 
     public BackupImageView(Context context) {
         super(context);
@@ -75,6 +87,16 @@ public class BackupImageView extends View {
         }
     }
 
+    public void setParticularBlurAllowed(boolean particularBlurAllowed) {
+        if (attached) {
+            throw new IllegalStateException("You should call setParticularBlurAllowed(...) only when detached!");
+        }
+        this.particularBlurAllowed = particularBlurAllowed;
+        if (particularBlurAllowed) {
+            particularBlurImageReceiver = new ImageReceiver();
+        }
+    }
+
     public void setHasBlur(boolean hasBlur) {
         if (hasBlur && !blurAllowed) {
             throw new IllegalStateException("You should call setBlurAllowed(...) before calling setHasBlur(true)!");
@@ -89,6 +111,20 @@ public class BackupImageView extends View {
         checkCreateBlurredImage();
     }
 
+    public void setHasParticularBlur(boolean hasParticularBlur) {
+        if (hasParticularBlur && !particularBlurAllowed) {
+            throw new IllegalStateException("You should call setParticularBlurAllowed(...) before calling setHasParticularBlur(true)!");
+        }
+        this.hasParticularBlur = hasParticularBlur;
+        if (!hasParticularBlur) {
+            if (particularBlurImageReceiver.getBitmap() != null && !particularBlurImageReceiver.getBitmap().isRecycled()) {
+                particularBlurImageReceiver.getBitmap().recycle();
+            }
+            particularBlurImageReceiver.setImageBitmap((Bitmap) null);
+        }
+        checkCreateParticularBlurredImage();
+    }
+
     public void onNewImageSet() {
         if (hasBlur) {
             if (blurImageReceiver.getBitmap() != null && !blurImageReceiver.getBitmap().isRecycled()) {
@@ -97,6 +133,13 @@ public class BackupImageView extends View {
             blurImageReceiver.setImageBitmap((Bitmap) null);
             checkCreateBlurredImage();
         }
+        if (hasParticularBlur) {
+            if (particularBlurImageReceiver.getBitmap() != null && !particularBlurImageReceiver.getBitmap().isRecycled()) {
+                particularBlurImageReceiver.getBitmap().recycle();
+            }
+            particularBlurImageReceiver.setImageBitmap((Bitmap) null);
+            checkCreateParticularBlurredImage();
+        }
     }
 
     private void checkCreateBlurredImage() {
@@ -104,6 +147,16 @@ public class BackupImageView extends View {
             Bitmap bitmap = imageReceiver.getBitmap();
             if (bitmap != null && !bitmap.isRecycled()) {
                 blurImageReceiver.setImageBitmap(Utilities.stackBlurBitmapMax(bitmap));
+                invalidate();
+            }
+        }
+    }
+
+    private void checkCreateParticularBlurredImage() {
+        if (hasParticularBlur && particularBlurImageReceiver.getBitmap() == null && imageReceiver.getBitmap() != null) {
+            Bitmap bitmap = imageReceiver.getBitmap();
+            if (bitmap != null && !bitmap.isRecycled()) {
+                particularBlurImageReceiver.setImageBitmap(Utilities.stackBlurBitmapMax(bitmap));
                 invalidate();
             }
         }
@@ -249,6 +302,9 @@ public class BackupImageView extends View {
         if (blurAllowed) {
             blurImageReceiver.setRoundRadius(value);
         }
+        if (particularBlurAllowed) {
+            particularBlurImageReceiver.setRoundRadius(value);
+        }
         invalidate();
     }
 
@@ -256,6 +312,9 @@ public class BackupImageView extends View {
         imageReceiver.setRoundRadius(tl, tr, bl ,br);
         if (blurAllowed) {
             blurImageReceiver.setRoundRadius(tl, tr, bl, br);
+        }
+        if (particularBlurAllowed) {
+            particularBlurImageReceiver.setRoundRadius(tl, tr, bl, br);
         }
         invalidate();
     }
@@ -293,6 +352,9 @@ public class BackupImageView extends View {
         if (blurAllowed) {
             blurImageReceiver.onDetachedFromWindow();
         }
+        if (particularBlurAllowed) {
+            particularBlurImageReceiver.onDetachedFromWindow();
+        }
         if (animatedEmojiDrawable != null) {
             animatedEmojiDrawable.removeView(this);
         }
@@ -307,6 +369,9 @@ public class BackupImageView extends View {
         if (applyAttach) imageReceiver.onAttachedToWindow();
         if (blurAllowed) {
             blurImageReceiver.onAttachedToWindow();
+        }
+        if (particularBlurAllowed) {
+            particularBlurImageReceiver.onAttachedToWindow();
         }
         if (animatedEmojiDrawable != null) {
             animatedEmojiDrawable.addView(this);
@@ -327,27 +392,78 @@ public class BackupImageView extends View {
                 imageReceiver.setImageCoords(0, 0, width, height);
                 if (blurAllowed) {
                     blurImageReceiver.setImageCoords(0, 0, width, height);
+                } else if (particularBlurAllowed) {
+                    particularBlurImageReceiver.setImageCoords(0, 0, width, height);
                 }
             } else {
                 imageReceiver.setImageCoords((getWidth() - width) / 2, (getHeight() - height) / 2, width, height);
                 if (blurAllowed) {
                     blurImageReceiver.setImageCoords((getWidth() - width) / 2, (getHeight() - height) / 2, width, height);
+                } else if (particularBlurAllowed) {
+                    particularBlurImageReceiver.setImageCoords((getWidth() - width) / 2, (getHeight() - height) / 2, width, height);
                 }
             }
         } else {
             imageReceiver.setImageCoords(0, 0, getWidth(), getHeight());
             if (blurAllowed) {
                 blurImageReceiver.setImageCoords(0, 0, getWidth(), getHeight());
+            } else if (particularBlurAllowed) {
+                particularBlurImageReceiver.setImageCoords(0, 0, getWidth(), getHeight());
             }
         }
         imageReceiver.draw(canvas);
         if (blurAllowed) {
             blurImageReceiver.draw(canvas);
+        } else if (particularBlurAllowed) {
+            float totalBlurHeight = getHeight() * 0.25f;
+            float solidPartHeight = totalBlurHeight * 0.80f;
+
+            if (gradientCache == null || totalBlurHeight != lastBlurHeight) {
+                int startColor = 0xCC000000;
+                int endColor = 0x00000000;
+
+                gradientCache = new LinearGradient(
+                        0, getHeight() - solidPartHeight,
+                        0, getHeight() - totalBlurHeight,
+                        new int[]{startColor, endColor},
+                        new float[]{0f, 1f},
+                        Shader.TileMode.CLAMP
+                );
+
+                if (gradientPaint == null) {
+                    gradientPaint = new Paint();
+                    gradientPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
+                }
+                gradientPaint.setShader(gradientCache);
+                lastBlurHeight = totalBlurHeight;
+            }
+            int saveCount = canvas.saveLayer(
+                    0, getHeight() - totalBlurHeight,
+                    getWidth(), getHeight(),
+                    null, Canvas.ALL_SAVE_FLAG
+            );
+            particularBlurImageReceiver.draw(canvas);
+            canvas.save();
+            canvas.clipRect(0, getHeight() - solidPartHeight, getWidth(), getHeight());
+            canvas.drawColor(0xCC000000, PorterDuff.Mode.DST_IN);
+            canvas.restore();
+            canvas.save();
+            canvas.clipRect(0, getHeight() - totalBlurHeight, getWidth(), getHeight() - solidPartHeight);
+            canvas.drawRect(
+                    0, getHeight() - totalBlurHeight,
+                    getWidth(), getHeight() - solidPartHeight,
+                    gradientPaint
+            );
+            canvas.restore();
+            canvas.restoreToCount(saveCount);
         }
     }
 
     public void setColorFilter(ColorFilter colorFilter) {
         imageReceiver.setColorFilter(colorFilter);
+        if(particularBlurImageReceiver!= null) {
+            particularBlurImageReceiver.setColorFilter(colorFilter);
+        }
     }
 
     public void setColorFilterForBlurred(ColorFilter colorFilter) {

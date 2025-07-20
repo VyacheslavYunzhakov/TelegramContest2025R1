@@ -54,6 +54,7 @@ import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Shader;
@@ -377,7 +378,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private FrameLayout avatarContainer2;
     private DrawerProfileCell.AnimatedStatusView animatedStatusView;
     private AvatarImageView avatarImage;
-    private View avatarOverlay;
     private AnimatorSet avatarAnimation;
     private RadialProgressView avatarProgressView;
     private ImageView timeItem;
@@ -838,6 +838,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         private boolean avatarHasBlur = false;
         Bitmap bitmap;
 
+        private LinearGradient gradientCache;
+        private Paint gradientPaint;
+        private float lastBlurHeight = -1;
+        private float currentExpandAnimatorValue = 0f;
+
         public void setAvatarsViewPager(ProfileGalleryView avatarsViewPager) {
             this.avatarsViewPager = avatarsViewPager;
         }
@@ -922,6 +927,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
         @Override
         protected void onAttachedToWindow() {
+            setParticularBlurAllowed(true);
+            setHasParticularBlur(true);
             super.onAttachedToWindow();
             foregroundImageReceiver.onAttachedToWindow();
         }
@@ -989,10 +996,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 imageReceiver.setImageCoords(inset, inset, getMeasuredWidth() - inset * 2f, getMeasuredHeight() - inset * 2f);
                 final float wasAlpha = imageReceiver.getAlpha();
                 imageReceiver.setAlpha(wasAlpha * alpha);
+                int[] radii = imageReceiver.getRoundRadius();
                 if (drawAvatar) {
                     if (blurAllowed && avatarHasBlur) {
                         blurImageReceiver.setImageCoords(inset, inset, getMeasuredWidth() - inset * 2f, getMeasuredHeight() - inset * 2f);
-                        int[] radii = imageReceiver.getRoundRadius();
                         if (radii != null) {
                             if (radii.length == 1) {
                                 blurImageReceiver.setRoundRadius(radii[0]);
@@ -1003,6 +1010,17 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         blurImageReceiver.draw(canvas);
                     } else {
                         imageReceiver.draw(canvas);
+                        if (particularBlurAllowed) {
+                            if (radii != null) {
+                                if (radii.length == 1) {
+                                    particularBlurImageReceiver.setRoundRadius(radii[0]);
+                                } else if (radii.length == 4) {
+                                    particularBlurImageReceiver.setRoundRadius(radii[0], radii[1], radii[2], radii[3]);
+                                }
+                            }
+                            particularBlurImageReceiver.setImageCoords(inset, inset, getMeasuredWidth() - inset * 2f, getMeasuredHeight() - inset * 2f);
+                            drawParticularBlur(canvas);
+                        }
                     }
                 }
                 imageReceiver.setAlpha(wasAlpha);
@@ -1018,8 +1036,64 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     final int radius = foregroundImageReceiver.getRoundRadius()[0];
                     canvas.drawRoundRect(rect, radius, radius, placeholderPaint);
                 }
+                if (particularBlurAllowed && !avatarHasBlur) {
+                    int[] radii = foregroundImageReceiver.getRoundRadius();
+                    if (radii != null) {
+                    if (radii.length == 1) {
+                        particularBlurImageReceiver.setRoundRadius(radii[0]);
+                    } else if (radii.length == 4) {
+                        particularBlurImageReceiver.setRoundRadius(radii[0], radii[1], radii[2], radii[3]);
+                    }
+                }
+                    particularBlurImageReceiver.setImageCoords(inset, inset, getMeasuredWidth() - inset * 2f, getMeasuredHeight() - inset * 2f);
+                    drawParticularBlur(canvas);
+                }
             }
             canvas.restore();
+        }
+
+        private void drawParticularBlur(Canvas canvas) {
+            float totalBlurHeight = getHeight() * 0.25f * currentExpandAnimatorValue;
+            float solidPartHeight = totalBlurHeight * 0.80f;
+
+            if (gradientCache == null || totalBlurHeight != lastBlurHeight) {
+                int startColor = 0xE6000000;
+                int endColor = 0x00000000;
+
+                gradientCache = new LinearGradient(
+                        0, getHeight() - solidPartHeight,
+                        0, getHeight() - totalBlurHeight,
+                        new int[]{startColor, endColor},
+                        new float[]{0f, 1f},
+                        Shader.TileMode.CLAMP
+                );
+
+                if (gradientPaint == null) {
+                    gradientPaint = new Paint();
+                    gradientPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
+                }
+                gradientPaint.setShader(gradientCache);
+                lastBlurHeight = totalBlurHeight;
+            }
+            int saveCount = canvas.saveLayer(
+                    0, getHeight() - totalBlurHeight,
+                    getWidth(), getHeight(),
+                    null, Canvas.ALL_SAVE_FLAG
+            );
+            particularBlurImageReceiver.draw(canvas);
+            canvas.save();
+            canvas.clipRect(0, getHeight() - solidPartHeight, getWidth(), getHeight());
+            canvas.drawColor(0xE6000000, PorterDuff.Mode.DST_IN);
+            canvas.restore();
+            canvas.save();
+            canvas.clipRect(0, getHeight() - totalBlurHeight, getWidth(), getHeight() - solidPartHeight);
+            canvas.drawRect(
+                    0, getHeight() - totalBlurHeight,
+                    getWidth(), getHeight() - solidPartHeight,
+                    gradientPaint
+            );
+            canvas.restore();
+            canvas.restoreToCount(saveCount);
         }
 
         @Override
@@ -1062,6 +1136,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
             progressToExpand = animatedFracture;
             invalidate();
+        }
+
+        public void setCurrentExpandAnimatorValue(float currentExpandAnimatorValue) {
+            this.currentExpandAnimatorValue = currentExpandAnimatorValue;
         }
     }
 
@@ -1274,12 +1352,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         private final RectF rect = new RectF();
 
         private final GradientDrawable topOverlayGradient;
-        private final GradientDrawable bottomOverlayGradient;
         private final GradientDrawable backgroundOverlayGradient;
         private final ValueAnimator animator;
         private final float[] animatorValues = new float[]{0f, 1f};
         private final Paint topBackgroundPaint;
-        private final Paint bottomBackgroundPaint;
         private final Paint barPaint;
         private final Paint selectedBarPaint;
 
@@ -1312,12 +1388,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             topOverlayGradient = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{0x42000000, 0});
             topOverlayGradient.setShape(GradientDrawable.RECTANGLE);
             backgroundOverlayGradient   = new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, new int[]{0x42000000, 0});
-            if(isSettings()) {
-                bottomOverlayGradient = new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, new int[]{0x42000000, 0});
-            } else {
-                bottomOverlayGradient = new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, new int[]{0x80FFFFFF, 0x33FFFFFF, 0});
-            }
-            bottomOverlayGradient.setShape(GradientDrawable.RECTANGLE);
 
             for (int i = 0; i < 2; i++) {
                 final GradientDrawable.Orientation orientation = i == 0 ? GradientDrawable.Orientation.LEFT_RIGHT : GradientDrawable.Orientation.RIGHT_LEFT;
@@ -1325,17 +1395,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 pressedOverlayGradient[i].setShape(GradientDrawable.RECTANGLE);
             }
 
-            bottomBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
             topBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
             topBackgroundPaint.setAlpha(66);
             topBackgroundPaint.setColor(Color.BLACK);
-            if (isSettings()) {
-                bottomBackgroundPaint.setColor(Color.BLACK);
-                bottomBackgroundPaint.setAlpha(66);
-            } else {
-                bottomBackgroundPaint.setColor(Color.WHITE);
-                bottomBackgroundPaint.setAlpha(128);
-            }
             animator = ValueAnimator.ofFloat(0f, 1f);
             animator.setDuration(250);
             animator.setInterpolator(CubicBezierInterpolator.EASE_BOTH);
@@ -1369,14 +1431,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             if (Build.VERSION.SDK_INT > 18) {
                 int alpha = (int) (255 * value);
                 topOverlayGradient.setAlpha(alpha);
-                bottomOverlayGradient.setAlpha(alpha);
                 backgroundOverlayGradient.setAlpha(alpha);
                 topBackgroundPaint.setAlpha((int) (66 * value));
-                if (isSettings()) {
-                    bottomBackgroundPaint.setAlpha((int) (66 * value));
-                } else {
-                    bottomBackgroundPaint.setAlpha((int) (128 * value));
-                }
                 barPaint.setAlpha((int) (0x55 * value));
                 selectedBarPaint.setAlpha(alpha);
                 this.alpha = value;
@@ -1421,7 +1477,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             topOverlayRect.set(0, 0, w, (int) (actionBarHeight * k));
             bottomOverlayRect.set(0, (int) (h - AndroidUtilities.dp(BUTTONS_CONTAINER_SIZE)), w, h);
             topOverlayGradient.setBounds(0, topOverlayRect.bottom, w, actionBarHeight + AndroidUtilities.dp(16f));
-            bottomOverlayGradient.setBounds(0, h - AndroidUtilities.dp(BUTTONS_CONTAINER_SIZE) - AndroidUtilities.dp(24f), w, bottomOverlayRect.top);
             backgroundOverlayGradient.setBounds(0, h - AndroidUtilities.dp(BUTTONS_CONTAINER_SIZE) - AndroidUtilities.dp(24f) - AndroidUtilities.dp(72f), w,  bottomOverlayRect.top);
             pressedOverlayGradient[0].setBounds(0, 0, w / 5, h);
             pressedOverlayGradient[1].setBounds(w - (w / 5), 0, w, h);
@@ -1437,10 +1492,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
 
             topOverlayGradient.draw(canvas);
-            bottomOverlayGradient.draw(canvas);
             backgroundOverlayGradient.draw(canvas);
             canvas.drawRect(topOverlayRect, topBackgroundPaint);
-            canvas.drawRect(bottomOverlayRect, bottomBackgroundPaint);
             canvas.drawRect(bottomOverlayRect, topBackgroundPaint);
 
 
@@ -5086,6 +5139,16 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
         showAvatarProgress(false, false);
 
+        buttonsContainer = new FrameLayout(context);
+        frameLayout.addView(buttonsContainer, LayoutHelper.createFrame(
+                LayoutHelper.MATCH_PARENT,
+                0,
+                Gravity.TOP,
+                0, 0, 0, 0
+        ));
+        allButtons = createButtonList();
+        setupButtonsContainer(allButtons);
+
         if (avatarsViewPager != null) {
             avatarsViewPager.onDestroy();
         }
@@ -5312,16 +5375,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
             onWriteButtonClick();
         });
-
-        buttonsContainer = new FrameLayout(context);
-        frameLayout.addView(buttonsContainer, LayoutHelper.createFrame(
-                LayoutHelper.MATCH_PARENT,
-                0,
-                Gravity.TOP,
-                0, 0, 0, 0
-        ));
-        allButtons = createButtonList();
-        setupButtonsContainer(allButtons);
 
         needLayout(false);
 
@@ -6354,6 +6407,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private void setAvatarExpandProgress(float animatedFracture) {
         final int newTop = ActionBar.getCurrentActionBarHeight() + (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0);
         final float value = currentExpandAnimatorValue = AndroidUtilities.lerp(expandAnimatorValues, currentExpanAnimatorFracture = animatedFracture);
+        if (avatarImage!= null) {
+            avatarImage.setCurrentExpandAnimatorValue(currentExpandAnimatorValue);
+        }
         if (avatarImage!= null && avatarImage.avatarHasBlur) {
             avatarImage.setHasBlurWithValue(false, 1);
         }
