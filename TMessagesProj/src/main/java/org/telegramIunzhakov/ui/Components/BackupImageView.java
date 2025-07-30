@@ -415,6 +415,9 @@ public class BackupImageView extends View {
         if (blurAllowed) {
             blurImageReceiver.draw(canvas);
         } else if (particularBlurAllowed) {
+            if (particularBlurImageReceiver.getBitmap() == null && imageReceiver.getBitmap() != null) {
+                checkCreateParticularBlurredImage();
+            }
             float totalBlurHeight = getHeight() * 0.25f;
             float solidPartHeight = totalBlurHeight * 0.80f;
 
