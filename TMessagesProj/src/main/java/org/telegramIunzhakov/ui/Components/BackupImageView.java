@@ -422,7 +422,7 @@ public class BackupImageView extends View {
             float solidPartHeight = totalBlurHeight * 0.80f;
 
             if (gradientCache == null || totalBlurHeight != lastBlurHeight) {
-                int startColor = 0xCC000000;
+                int startColor = 0xE6000000;
                 int endColor = 0x00000000;
 
                 gradientCache = new LinearGradient(
@@ -448,7 +448,7 @@ public class BackupImageView extends View {
             particularBlurImageReceiver.draw(canvas);
             canvas.save();
             canvas.clipRect(0, getHeight() - solidPartHeight, getWidth(), getHeight());
-            canvas.drawColor(0xCC000000, PorterDuff.Mode.DST_IN);
+            canvas.drawColor(0xE6000000, PorterDuff.Mode.DST_IN);
             canvas.restore();
             canvas.save();
             canvas.clipRect(0, getHeight() - totalBlurHeight, getWidth(), getHeight() - solidPartHeight);

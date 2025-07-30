@@ -2319,6 +2319,10 @@ public class ImageReceiver implements NotificationCenter.NotificationCenterDeleg
         return currentImageDrawable != null || currentMediaDrawable != null || staticThumbDrawable instanceof VectorAvatarThumbDrawable;
     }
 
+    public boolean hasNotThumbForPullingDownCheck() {
+        return currentImageDrawable != null || currentMediaDrawable != null || staticThumbDrawable != null;
+    }
+
     public boolean hasNotThumbOrOnlyStaticThumb() {
         return currentImageDrawable != null || currentMediaDrawable != null || staticThumbDrawable instanceof VectorAvatarThumbDrawable || (staticThumbDrawable != null && !(staticThumbDrawable instanceof AvatarDrawable) && currentImageKey == null && currentMediaKey == null);
     }
