@@ -225,6 +225,7 @@ import org.telegramIunzhakov.ui.Components.CanvasButton;
 import org.telegramIunzhakov.ui.Components.ChatActivityInterface;
 import org.telegramIunzhakov.ui.Components.ChatAvatarContainer;
 import org.telegramIunzhakov.ui.Components.ChatNotificationsPopupWrapper;
+import org.telegramIunzhakov.ui.Components.ClipRoundedDrawable;
 import org.telegramIunzhakov.ui.Components.ColoredImageSpan;
 import org.telegramIunzhakov.ui.Components.CombinedDrawable;
 import org.telegramIunzhakov.ui.Components.CrossfadeDrawable;
@@ -11197,7 +11198,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
             if (avatarBig == null && !isTopic) {
                 Drawable currentDrawable = avatarImage.getImageReceiver().getDrawable();
-                Drawable thumb = currentDrawable != null ? currentDrawable : avatarDrawable;
+                Drawable thumb = currentDrawable != null ? new ClipRoundedDrawable(currentDrawable) : avatarDrawable;
                 avatarImage.setImage(videoLocation, filter, thumbLocation, avatarSizeFilter, thumb, chat);
             }
             if (imageLocation != null && (prevLoadedImageLocation == null || imageLocation.photoId != prevLoadedImageLocation.photoId)) {
